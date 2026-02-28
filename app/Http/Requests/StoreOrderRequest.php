@@ -22,11 +22,22 @@ class StoreOrderRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'items' => ['required', 'array', 'min:1'],
+            'truck_id' => ['nullable', 'exists:trucks,id'],
+            'items' => [
+                'required', 
+                'array', 
+                'min:1', 
+                new \App\Rules\MaxPayloadVolumeRule($this->input('truck_id'))
+            ],
             'items.*.name' => ['required', 'string', 'max:255'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.weight_kg' => ['required', 'numeric', 'min:0.01'],
             'items.*.price_cents' => ['required', 'integer', 'min:0'],
+            'items.*.cbm' => ['nullable', 'numeric', 'min:0'],
+            'items.*.length_cm' => ['nullable', 'integer', 'min:0'],
+            'items.*.width_cm' => ['nullable', 'integer', 'min:0'],
+            'items.*.height_cm' => ['nullable', 'integer', 'min:0'],
+            'items.*.is_dangerous' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
 

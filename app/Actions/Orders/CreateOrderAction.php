@@ -17,17 +17,33 @@ class CreateOrderAction
         $companyId = $companyIdOverride ?? $user->company_id;
 
         return DB::transaction(function () use ($validatedData, $user, $companyId) {
-            $totalPriceCents = collect($validatedData['items'])->sum(function ($item) {
-                return $item['quantity'] * $item['price_cents'];
-            });
+            $totalWeight = collect($validatedData['items'])->sum(fn($i) => $i['weight_kg'] * $i['quantity']);
+            $totalCbm = collect($validatedData['items'])->sum(fn($i) => ($i['cbm'] ?? 0) * $i['quantity']);
+            $isDangerous = collect($validatedData['items'])->contains(fn($i) => $i['is_dangerous'] ?? false);
+
+            $pricingData = new \App\Logistics\Cargo\PricingData(
+                weightKg: (float) $totalWeight,
+                cbm: (float) $totalCbm,
+                isDangerous: (bool) $isDangerous
+            );
+            $pipeline = new \App\Logistics\Cargo\PricingPipeline();
+            $pipelineResult = $pipeline->calculate($pricingData);
+
+            // Override total price with the pipeline calculated price (or fallback to manual if 0 CBM/Weight)
+            $totalPriceCents = $pipelineResult->finalPriceCents > 0 
+                ? (int) $pipelineResult->finalPriceCents 
+                : collect($validatedData['items'])->sum(function ($item) {
+                    return $item['quantity'] * $item['price_cents'];
+                });
 
             $order = Order::create([
                 'user_id' => $user->id,
                 'company_id' => $companyId,
+                'truck_id' => $validatedData['truck_id'] ?? null,
                 'order_number' => 'ORD-'.strtoupper(Str::random(8)),
                 'status' => 'new',
                 'total_price_cents' => $totalPriceCents,
-                'currency' => 'USD',
+                'currency' => 'USD', // Keeping USD as default
                 'notes' => $validatedData['notes'] ?? null,
             ]);
 
@@ -37,6 +53,11 @@ class CreateOrderAction
                     'name' => $item['name'],
                     'quantity' => $item['quantity'],
                     'weight_kg' => $item['weight_kg'],
+                    'cbm' => $item['cbm'] ?? null,
+                    'length_cm' => $item['length_cm'] ?? null,
+                    'width_cm' => $item['width_cm'] ?? null,
+                    'height_cm' => $item['height_cm'] ?? null,
+                    'is_dangerous' => $item['is_dangerous'] ?? false,
                     'price_cents' => $item['price_cents'],
                 ]);
             }

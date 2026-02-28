@@ -26,8 +26,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
-
-# AI Agents & Laravel Boost
 /.agents
 /.claude
 /.gemini
@@ -35,4 +33,4 @@ yarn-error.log
 /CLAUDE.md
 /GEMINI.md
 /boost.json
-/about_saas.md
+/roadmap.md

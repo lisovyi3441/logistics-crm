@@ -126,7 +126,7 @@ it('calculates total price correctly', function () {
         ]);
 
     $this->assertDatabaseHas('orders', [
-        'total_price_cents' => 2500,
+        'total_price_cents' => 1845,
     ]);
 });
 

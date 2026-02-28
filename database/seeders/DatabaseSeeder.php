@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RoleSeeder::class,
+            TruckSeeder::class,
         ]);
 
         $myCompany = Company::factory()->create([
