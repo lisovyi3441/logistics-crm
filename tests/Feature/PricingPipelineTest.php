@@ -10,7 +10,7 @@ use App\Logistics\Cargo\Pipes\ApplyVolumeDiscount;
 use App\Logistics\Cargo\Pipes\ApplyTax;
 
 it('calculates base price correctly using weight if it yields higher cost', function () {
-    $data = new PricingData(weightKg: 100, cbm: 0.1, isDangerous: false);
+    $data = new PricingData(weightKg: 100, cbm: 0.1, isDangerous: false, declaredValueCents: 0);
     $pipeline = new PricingPipeline();
     
     $result = $pipeline->calculate($data);
@@ -53,20 +53,22 @@ it('applies volume discount correctly for high volume cargo', function () {
 
 it('calculates complex final price with all modifiers', function () {
     // 20 CBM -> Base Price: 200,000 cents
+    // Declared Value 100,000 -> +1% -> 1,000 cents (Insurance)
     // Dangerous -> +20% -> 40,000 cents
     // > 10 CBM -> -5% -> 5% of 240,000 = 12,000 cents
-    // Subtotal = 200k + 40k - 12k = 228,000 cents
-    // Tax -> 23% of 228,000 = 52,440 cents
-    // Total = 228,000 + 52,440 = 280,440 cents
+    // Subtotal = 200k + 40k + 1k (insurance) - 12k = 229,000 cents
+    // Tax -> 23% of 229,000 = 52,670 cents
+    // Total = 229,000 + 52,670 = 281,670 cents
     
-    $data = new PricingData(weightKg: 100, cbm: 20, isDangerous: true);
+    $data = new PricingData(weightKg: 100, cbm: 20, isDangerous: true, declaredValueCents: 100000);
     $pipeline = new PricingPipeline();
     
     $result = $pipeline->calculate($data);
     
     expect($result->basePriceCents)->toBe(200000.0)
+        ->and($result->insuranceFeeCents)->toBe(1000.0)
         ->and($result->surchargeCents)->toBe(40000.0)
         ->and($result->discountCents)->toBe(12000.0)
-        ->and($result->taxCents)->toBe(52440.0)
-        ->and($result->finalPriceCents)->toBe(280440.0);
+        ->and($result->taxCents)->toBe(52670.0)
+        ->and($result->finalPriceCents)->toBe(281670.0);
 });

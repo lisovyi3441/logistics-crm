@@ -19,7 +19,7 @@ class OrderItem extends Model
         return [
             'quantity' => 'integer',
             'weight_kg' => 'float',
-            'price_cents' => 'integer',
+            'declared_value_cents' => 'integer',
         ];
     }
 

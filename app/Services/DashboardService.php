@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Company;
 use App\Models\Order;
+use App\Models\User;
 use Illuminate\Support\Collection;
 
 class DashboardService
@@ -15,7 +16,7 @@ class DashboardService
      *
      * @return array<string, mixed>
      */
-    public function getStats(?\App\Models\User $user = null): array
+    public function getStats(?User $user = null): array
     {
         $orderQuery = Order::query();
 
@@ -38,7 +39,7 @@ class DashboardService
     /**
      * Get the most recent orders formatted for the dashboard presentation.
      */
-    public function getRecentOrders(int $limit = 5, ?\App\Models\User $user = null): Collection
+    public function getRecentOrders(int $limit = 5, ?User $user = null): Collection
     {
         $query = Order::with('company')->latest();
 

@@ -10,6 +10,8 @@ class PricingData
         public float $weightKg,
         public float $cbm,
         public bool $isDangerous,
+        public float $declaredValueCents = 0,
+        public float $insuranceFeeCents = 0,
         public float $basePriceCents = 0,
         public float $surchargeCents = 0,
         public float $discountCents = 0,
@@ -20,7 +22,7 @@ class PricingData
 
     public function calculateFinalPrice(): float
     {
-        $this->finalPriceCents = $this->basePriceCents + $this->surchargeCents - $this->discountCents + $this->taxCents;
+        $this->finalPriceCents = $this->basePriceCents + $this->surchargeCents + $this->insuranceFeeCents - $this->discountCents + $this->taxCents;
         return $this->finalPriceCents;
     }
 }

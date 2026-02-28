@@ -10,7 +10,7 @@ use App\Logistics\Cargo\PricingData;
 class ApplyDangerousGoodsSurcharge
 {
     // Apply a 20% surcharge for hazardous materials
-    public const SURCHARGE_MULTIPLIER = 0.20;
+    public const float SURCHARGE_MULTIPLIER = 0.20;
 
     public function handle(PricingData $data, Closure $next)
     {

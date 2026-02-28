@@ -1,5 +1,13 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 defineProps<{
@@ -24,8 +32,8 @@ const page = usePage();
             { title: 'Companies', href: '/companies' },
         ]"
     >
-        <div class="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-            <div class="flex items-center justify-between">
+        <div class="flex flex-col gap-4 p-4 flex-1 min-h-0">
+            <div class="flex-none flex items-center justify-between">
                 <h1 class="text-2xl font-bold dark:text-white">Companies</h1>
                 <Link href="/companies/create" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-indigo-600 text-white shadow hover:bg-indigo-700 h-9 px-4 py-2">
                     Create Company
@@ -36,61 +44,71 @@ const page = usePage();
                 {{ page.props.errors.message }}
             </div>
 
-            <div class="overflow-x-auto rounded-xl border border-sidebar-border/70 dark:border-sidebar-border bg-white dark:bg-zinc-900">
-                <table class="w-full text-sm text-left text-zinc-500 dark:text-zinc-400">
-                    <thead class="text-xs text-zinc-700 uppercase bg-zinc-50 dark:bg-zinc-800/50 dark:text-zinc-300 border-b border-sidebar-border/70 dark:border-sidebar-border">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">ID</th>
-                            <th scope="col" class="px-6 py-3">Name</th>
-                            <th scope="col" class="px-6 py-3">VAT/Tax ID</th>
-                            <th scope="col" class="px-6 py-3">Contacts</th>
-                            <th scope="col" class="px-6 py-3 text-center">Users</th>
-                            <th scope="col" class="px-6 py-3 text-center">Orders</th>
-                            <th scope="col" class="px-6 py-3 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="company in companies.data" :key="company.id" class="bg-white border-b border-sidebar-border/70 dark:bg-zinc-900 dark:border-sidebar-border hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                            <td class="px-6 py-4">{{ company.id }}</td>
-                            <td class="px-6 py-4 font-medium text-zinc-900 dark:text-white">
+            <div class="flex flex-col flex-1 min-h-0 border rounded-xl bg-card text-card-foreground shadow-sm">
+                <div class="flex-1 overflow-y-auto min-h-0 rounded-t-xl">
+                    <Table class="whitespace-nowrap h-full">
+                    <TableHeader class="sticky top-0 z-10 bg-card">
+                        <TableRow class="bg-muted/50 whitespace-nowrap">
+                            <TableHead class="text-center">ID</TableHead>
+                            <TableHead class="text-center">Name</TableHead>
+                            <TableHead class="text-center">VAT/Tax ID</TableHead>
+                            <TableHead class="text-center">Contacts</TableHead>
+                            <TableHead class="text-center">Users</TableHead>
+                            <TableHead class="text-center">Orders</TableHead>
+                            <TableHead class="text-center">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableRow v-if="companies.data.length === 0">
+                            <TableCell colspan="7" class="text-center py-10 text-muted-foreground">
+                                No companies found.
+                            </TableCell>
+                        </TableRow>
+
+                        <TableRow v-for="company in companies.data" :key="company.id" class="hover:bg-muted/50">
+                            <TableCell class="font-medium font-mono text-zinc-600 dark:text-zinc-300 text-center">
+                                {{ company.id }}
+                            </TableCell>
+                            <TableCell class="font-medium text-center">
                                 <Link :href="`/companies/${company.id}`" class="hover:underline">
                                     {{ company.name }}
                                 </Link>
-                            </td>
-                            <td class="px-6 py-4">{{ company.vat_number || '-' }}</td>
-                            <td class="px-6 py-4">
+                            </TableCell>
+                            <TableCell class="text-muted-foreground text-center">{{ company.vat_number || '-' }}</TableCell>
+                            <TableCell class="text-center">
                                 <div>{{ company.contact_phone || '-' }}</div>
-                                <div class="text-xs text-zinc-400">{{ company.contact_email || '' }}</div>
-                            </td>
-                            <td class="px-6 py-4 text-center">{{ company.users_count }}</td>
-                            <td class="px-6 py-4 text-center">{{ company.orders_count }}</td>
-                            <td class="px-6 py-4 text-right space-x-2">
+                                <div class="text-xs text-muted-foreground">{{ company.contact_email || '' }}</div>
+                            </TableCell>
+                            <TableCell class="text-center">{{ company.users_count }}</TableCell>
+                            <TableCell class="text-center">{{ company.orders_count }}</TableCell>
+                            <TableCell class="text-center space-x-3 whitespace-nowrap">
                                 <Link :href="`/companies/${company.id}/edit`" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</Link>
                                 <button @click="deleteCompany(company.id)" class="font-medium text-red-600 dark:text-red-500 hover:underline">Delete</button>
-                            </td>
-                        </tr>
-                        <tr v-if="companies.data.length === 0">
-                            <td colspan="7" class="px-6 py-10 text-center text-zinc-500">
-                                No companies found.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
             </div>
-            
-            <!-- Pagination logic here if needed: companies.meta.links -->
-            <div class="flex gap-2 justify-center mt-4" v-if="companies.meta && companies.meta.last_page > 1">
-                <Link 
-                    v-for="(link, i) in companies.meta.links" 
-                    :key="i" 
-                    :href="link.url || '#'" 
-                    class="px-3 py-1 rounded-md border text-sm"
-                    :class="[
-                        link.active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700',
-                        !link.url ? 'opacity-50 cursor-not-allowed' : ''
-                    ]"
-                    v-html="link.label"
-                ></Link>
+
+            <div class="flex-none flex flex-wrap gap-2 justify-center p-4 border-t border-sidebar-border bg-muted/10 rounded-b-xl" v-if="companies.meta && companies.meta.last_page > 1">
+                <template v-for="(link, i) in companies.meta.links" :key="i">
+                    <Link
+                        v-if="link.url"
+                        :href="link.url"
+                        class="px-3 py-1 rounded-md border text-sm"
+                        :class="link.active
+                            ? 'bg-indigo-600 text-white border-indigo-600'
+                            : 'bg-white text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700'"
+                    >
+                        <span v-html="link.label"></span>
+                    </Link>
+                    <span
+                        v-else
+                        class="px-3 py-1 rounded-md border text-sm opacity-50 cursor-not-allowed bg-white text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700"
+                        v-html="link.label"
+                    ></span>
+                </template>
+            </div>
             </div>
         </div>
     </AppLayout>

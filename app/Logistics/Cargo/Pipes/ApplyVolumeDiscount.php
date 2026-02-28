@@ -10,8 +10,8 @@ use App\Logistics\Cargo\PricingData;
 class ApplyVolumeDiscount
 {
     // Apply a 5% discount if cargo is over 10 CBM
-    public const DISCOUNT_MULTIPLIER = 0.05;
-    public const CBM_THRESHOLD = 10.0;
+    public const float DISCOUNT_MULTIPLIER = 0.05;
+    public const float CBM_THRESHOLD = 10.0;
 
     public function handle(PricingData $data, Closure $next)
     {

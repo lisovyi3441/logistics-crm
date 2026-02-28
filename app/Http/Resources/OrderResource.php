@@ -20,7 +20,12 @@ class OrderResource extends JsonResource
             'created_at' => $this->created_at, // Можна відформатувати тут ->format('d.m.Y H:i')
             'total_price_cents' => $this->total_price_cents,
 
-            'total_price_cents' => $this->total_price_cents,
+            'truck' => $this->whenLoaded('truck', function () {
+                return [
+                    'id' => $this->truck->id,
+                    'name' => $this->truck->name,
+                ];
+            }),
 
             'company' => [
                 'name' => $this->company->name ?? 'N/A',
@@ -49,7 +54,12 @@ class OrderResource extends JsonResource
                     'name' => $item->name,
                     'quantity' => $item->quantity,
                     'weight_kg' => $item->weight_kg,
-                    'price_cents' => $item->price_cents,
+                    'cbm' => $item->cbm,
+                    'length_cm' => $item->length_cm,
+                    'width_cm' => $item->width_cm,
+                    'height_cm' => $item->height_cm,
+                    'is_dangerous' => $item->is_dangerous,
+                    'declared_value_cents' => $item->declared_value_cents,
                 ]);
             }),
 

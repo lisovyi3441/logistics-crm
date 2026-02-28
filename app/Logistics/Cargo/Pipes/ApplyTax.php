@@ -9,12 +9,12 @@ use App\Logistics\Cargo\PricingData;
 
 class ApplyTax
 {
-    // Poland VAT 23%
+    // VAT 23%
     public const VAT_MULTIPLIER = 0.23;
 
     public function handle(PricingData $data, Closure $next)
     {
-        $subtotal = $data->basePriceCents + $data->surchargeCents - $data->discountCents;
+        $subtotal = $data->basePriceCents + $data->surchargeCents + $data->insuranceFeeCents - $data->discountCents;
         $data->taxCents = $subtotal * self::VAT_MULTIPLIER;
         
         $data->calculateFinalPrice(); // calculate final inside

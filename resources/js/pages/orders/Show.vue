@@ -127,6 +127,10 @@ const updateStatus = (event: Event) => {
                                 <dt class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total Amount</dt>
                                 <dd class="mt-1 text-2xl font-bold text-zinc-900 dark:text-white">{{ formatMoney(orderData.total_price_cents) }}</dd>
                             </div>
+                            <div>
+                                <dt class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Assigned Truck</dt>
+                                <dd class="mt-1 text-sm font-bold text-indigo-600 dark:text-indigo-400">{{ orderData.truck?.name || 'Not assigned' }}</dd>
+                            </div>
                         </dl>
                     </div>
                 </div>
@@ -145,18 +149,30 @@ const updateStatus = (event: Event) => {
                                 <th scope="col" class="px-6 py-3 font-medium">Name</th>
                                 <th scope="col" class="px-6 py-3 font-medium">Quantity</th>
                                 <th scope="col" class="px-6 py-3 font-medium">Weight (kg)</th>
-                                <th scope="col" class="px-6 py-3 font-medium text-right">Price</th>
+                                <th scope="col" class="px-6 py-3 font-medium">Volume (CBM)</th>
+                                <th scope="col" class="px-6 py-3 font-medium">ADR</th>
+                                <th scope="col" class="px-6 py-3 font-medium text-right" title="Declared Value (Insurance)">Value</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="item in orderData.items" :key="item.id" class="border-b border-sidebar-border/70 last:border-0 hover:bg-zinc-50 dark:border-sidebar-border dark:hover:bg-zinc-800/50">
-                                <td class="whitespace-nowrap px-6 py-4 font-medium text-zinc-900 dark:text-white">{{ item.name }}</td>
+                                <td class="whitespace-nowrap px-6 py-4 font-medium text-zinc-900 dark:text-white">
+                                    {{ item.name }}
+                                    <div class="text-[10px] text-zinc-500 mt-1" v-if="item.length_cm || item.width_cm || item.height_cm">
+                                        Dims: {{ item.length_cm || '-' }}x{{ item.width_cm || '-' }}x{{ item.height_cm || '-' }} cm
+                                    </div>
+                                </td>
                                 <td class="px-6 py-4">{{ item.quantity }}</td>
                                 <td class="px-6 py-4">{{ item.weight_kg ?? '-' }}</td>
-                                <td class="px-6 py-4 text-right">{{ item.price_cents ? formatMoney(item.price_cents) : '-' }}</td>
+                                <td class="px-6 py-4">{{ item.cbm ?? '-' }}</td>
+                                <td class="px-6 py-4">
+                                    <Badge v-if="item.is_dangerous" class="bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20">Yes</Badge>
+                                    <span v-else class="text-zinc-500">-</span>
+                                </td>
+                                <td class="px-6 py-4 text-right">{{ item.declared_value_cents ? formatMoney(item.declared_value_cents) : '-' }}</td>
                             </tr>
                             <tr v-if="!orderData.items || orderData.items.length === 0">
-                                <td colspan="4" class="px-6 py-8 text-center text-zinc-500">No items found for this order.</td>
+                                <td colspan="6" class="px-6 py-8 text-center text-zinc-500">No items found for this order.</td>
                             </tr>
                         </tbody>
                     </table>

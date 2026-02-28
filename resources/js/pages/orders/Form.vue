@@ -6,20 +6,22 @@ import { Plus, Trash2 } from 'lucide-vue-next';
 
 const props = defineProps<{
     companies: Array<{ id: number; name: string }>;
+    trucks: Array<{ id: number; name: string; max_weight_kg: number; max_volume_cbm: number }>;
     is_admin: boolean;
     default_company_id?: number;
 }>();
 
 const form = useForm({
     company_id: props.default_company_id || '',
+    truck_id: '',
     notes: '',
     items: [
-        { name: '', quantity: 1, weight_kg: 0, price_cents: 0 }
+        { name: '', quantity: 1, weight_kg: 0, declared_value_cents: 0, cbm: 0, length_cm: '', width_cm: '', height_cm: '', is_dangerous: false }
     ]
 });
 
 const addItem = () => {
-    form.items.push({ name: '', quantity: 1, weight_kg: 0, price_cents: 0 });
+    form.items.push({ name: '', quantity: 1, weight_kg: 0, declared_value_cents: 0, cbm: 0, length_cm: '', width_cm: '', height_cm: '', is_dangerous: false });
 };
 
 const removeItem = (index: number) => {
@@ -71,6 +73,17 @@ const submit = () => {
                         </div>
 
                         <div>
+                            <label for="truck_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Assign Truck (Optional)</label>
+                            <select id="truck_id" v-model="form.truck_id" class="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                                <option value="">No truck assigned</option>
+                                <option v-for="truck in trucks" :key="truck.id" :value="truck.id">
+                                    {{ truck.name }} (Max: {{ truck.max_weight_kg }}kg / {{ truck.max_volume_cbm }} cbm)
+                                </option>
+                            </select>
+                            <p v-if="form.errors.truck_id" class="mt-1 text-sm text-red-600">{{ form.errors.truck_id }}</p>
+                        </div>
+
+                        <div class="sm:col-span-2">
                             <label for="notes" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Notes (Optional)</label>
                             <textarea id="notes" v-model="form.notes" rows="1" class="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"></textarea>
                             <p v-if="form.errors.notes" class="mt-1 text-sm text-red-600">{{ form.errors.notes }}</p>
@@ -109,14 +122,41 @@ const submit = () => {
                                     <p v-if="form.errors[`items.${index}.quantity`]" class="mt-1 text-xs text-red-600">{{ form.errors[`items.${index}.quantity`] }}</p>
                                 </div>
                                 <div>
+                                    <label class="block text-[10px] uppercase font-bold text-zinc-500 mb-1" title="For Insurance purposes">Declared Value (cents) *</label>
+                                    <input type="number" v-model="item.declared_value_cents" min="0" required class="block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                                    <p v-if="form.errors[`items.${index}.declared_value_cents`]" class="mt-1 text-xs text-red-600">{{ form.errors[`items.${index}.declared_value_cents`] }}</p>
+                                </div>
+                                
+                                <div>
                                     <label class="block text-[10px] uppercase font-bold text-zinc-500 mb-1">Weight (kg) *</label>
                                     <input type="number" step="0.01" v-model="item.weight_kg" min="0.01" required class="block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
                                     <p v-if="form.errors[`items.${index}.weight_kg`]" class="mt-1 text-xs text-red-600">{{ form.errors[`items.${index}.weight_kg`] }}</p>
                                 </div>
                                 <div>
-                                    <label class="block text-[10px] uppercase font-bold text-zinc-500 mb-1">Price per item (cents) *</label>
-                                    <input type="number" v-model="item.price_cents" min="0" required class="block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
-                                    <p v-if="form.errors[`items.${index}.price_cents`]" class="mt-1 text-xs text-red-600">{{ form.errors[`items.${index}.price_cents`] }}</p>
+                                    <label class="block text-[10px] uppercase font-bold text-zinc-500 mb-1">Volume (CBM)</label>
+                                    <input type="number" step="0.001" v-model="item.cbm" min="0" class="block w-full rounded-md border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                                    <p v-if="form.errors[`items.${index}.cbm`]" class="mt-1 text-xs text-red-600">{{ form.errors[`items.${index}.cbm`] }}</p>
+                                </div>
+                                <div class="col-span-1 border border-zinc-200 dark:border-zinc-800 rounded p-2 flex gap-2">
+                                    <div class="flex-1">
+                                        <label class="block text-[10px] uppercase font-bold text-zinc-500 mb-1" title="Length (cm)">L(cm)</label>
+                                        <input type="number" v-model="item.length_cm" min="0" class="block w-full rounded-md border border-zinc-300 px-1 py-1 text-xs shadow-sm focus:border-indigo-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800">
+                                    </div>
+                                    <div class="flex-1">
+                                        <label class="block text-[10px] uppercase font-bold text-zinc-500 mb-1" title="Width (cm)">W(cm)</label>
+                                        <input type="number" v-model="item.width_cm" min="0" class="block w-full rounded-md border border-zinc-300 px-1 py-1 text-xs shadow-sm focus:border-indigo-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800">
+                                    </div>
+                                    <div class="flex-1">
+                                        <label class="block text-[10px] uppercase font-bold text-zinc-500 mb-1" title="Height (cm)">H(cm)</label>
+                                        <input type="number" v-model="item.height_cm" min="0" class="block w-full rounded-md border border-zinc-300 px-1 py-1 text-xs shadow-sm focus:border-indigo-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800">
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-start mt-4">
+                                    <label class="flex items-center space-x-2 cursor-pointer text-sm">
+                                        <input type="checkbox" v-model="item.is_dangerous" class="rounded border-zinc-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                        <span class="text-zinc-700 dark:text-zinc-300 font-medium text-red-600">Dangerous Goods (ADR)</span>
+                                    </label>
+                                    <p v-if="form.errors[`items.${index}.is_dangerous`]" class="mt-1 text-xs text-red-600">{{ form.errors[`items.${index}.is_dangerous`] }}</p>
                                 </div>
                             </div>
                         </div>

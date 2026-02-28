@@ -15,6 +15,22 @@ class StoreOrderRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('items') && is_array($this->items)) {
+            $items = $this->items;
+            foreach ($items as &$item) {
+                if (empty($item['cbm']) && !empty($item['length_cm']) && !empty($item['width_cm']) && !empty($item['height_cm'])) {
+                    $item['cbm'] = round(($item['length_cm'] * $item['width_cm'] * $item['height_cm']) / 1000000, 4);
+                }
+            }
+            $this->merge(['items' => $items]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
@@ -32,7 +48,7 @@ class StoreOrderRequest extends FormRequest
             'items.*.name' => ['required', 'string', 'max:255'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.weight_kg' => ['required', 'numeric', 'min:0.01'],
-            'items.*.price_cents' => ['required', 'integer', 'min:0'],
+            'items.*.declared_value_cents' => ['nullable', 'integer', 'min:0'],
             'items.*.cbm' => ['nullable', 'numeric', 'min:0'],
             'items.*.length_cm' => ['nullable', 'integer', 'min:0'],
             'items.*.width_cm' => ['nullable', 'integer', 'min:0'],

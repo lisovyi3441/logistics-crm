@@ -9,6 +9,7 @@ use App\Http\Requests\StoreOrderRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Company;
 use App\Models\Order;
+use App\Models\Truck;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -53,9 +54,12 @@ class OrderController extends Controller
         if ($user->hasRole('admin')) {
             $companies = Company::select('id', 'name')->get();
         }
+        
+        $trucks = Truck::get(['id', 'name', 'max_weight_kg', 'max_volume_cbm']);
 
         return Inertia::render('orders/Form', [
             'companies' => $companies,
+            'trucks' => $trucks,
             'is_admin' => $user->hasRole('admin'),
             'default_company_id' => $user->company_id,
         ]);

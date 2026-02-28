@@ -33,6 +33,11 @@ class Order extends Model
         return $this->belongsTo(Company::class);
     }
 
+    public function truck(): BelongsTo
+    {
+        return $this->belongsTo(Truck::class);
+    }
+
     public function items(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(OrderItem::class);

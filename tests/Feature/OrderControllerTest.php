@@ -32,7 +32,7 @@ it('allows admin to create order for any company', function () {
                     'name' => 'Item 1',
                     'quantity' => 2,
                     'weight_kg' => 10.5,
-                    'price_cents' => 5000,
+                    'declared_value_cents' => 5000,
                 ],
             ],
         ]);
@@ -67,7 +67,7 @@ it('forces manager to create order for their own company', function () {
                     'name' => 'Manager Item',
                     'quantity' => 1,
                     'weight_kg' => 100,
-                    'price_cents' => 10000,
+                    'declared_value_cents' => 10000,
                 ],
             ],
         ]);
@@ -103,7 +103,7 @@ it('validates each item fields', function () {
                     'name' => '', // Empty name
                     'quantity' => 0, // Invalid quantity
                     'weight_kg' => -1, // Invalid weight
-                    'price_cents' => -10, // Invalid price
+                    'declared_value_cents' => -10, // Invalid price
                 ],
             ],
         ])
@@ -111,7 +111,7 @@ it('validates each item fields', function () {
             'items.0.name',
             'items.0.quantity',
             'items.0.weight_kg',
-            'items.0.price_cents',
+            'items.0.declared_value_cents',
         ]);
 });
 
@@ -120,13 +120,13 @@ it('calculates total price correctly', function () {
         ->post('/orders', [
             'company_id' => $this->company->id,
             'items' => [
-                ['name' => 'A', 'quantity' => 2, 'weight_kg' => 1, 'price_cents' => 1000], // 2000
-                ['name' => 'B', 'quantity' => 1, 'weight_kg' => 1, 'price_cents' => 500],  // 500
+                ['name' => 'A', 'quantity' => 2, 'weight_kg' => 1, 'declared_value_cents' => 1000], // 2000
+                ['name' => 'B', 'quantity' => 1, 'weight_kg' => 1, 'declared_value_cents' => 500],  // 500
             ],
         ]);
 
     $this->assertDatabaseHas('orders', [
-        'total_price_cents' => 1845,
+        'total_price_cents' => 1875, // Base 1500 (3kg*500) + 1% Insurance of 2500 (25) + 23% Tax of 1525 (350.75 floor to 350)
     ]);
 });
 
