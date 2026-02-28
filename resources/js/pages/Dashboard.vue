@@ -1,8 +1,5 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import { type BreadcrumbItem } from '@/types';
 import { router } from '@inertiajs/vue3';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -13,6 +10,9 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { dashboard } from '@/routes';
+import { type BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -40,11 +40,6 @@ defineProps<{
     }>;
 }>();
 
-const formatMoney = (val: string | number) => {
-    // total_price_cents is probably formatted as string from controller without cents conversion here, or is it already string?
-    // Wait, let's look at the original code. It was `<td class="px-6 py-4">${{ order.total_price }}</td>`.
-    // And let's not break how the user sees it, just output `$${val}` or what was there.
-};
 
 </script>
 

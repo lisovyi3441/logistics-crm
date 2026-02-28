@@ -54,7 +54,7 @@ class OrderController extends Controller
         if ($user->hasRole('admin')) {
             $companies = Company::select('id', 'name')->get();
         }
-        
+
         $trucks = Truck::get(['id', 'name', 'max_weight_kg', 'max_volume_cbm']);
 
         return Inertia::render('orders/Form', [

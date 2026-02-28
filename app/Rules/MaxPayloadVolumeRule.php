@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace App\Rules;
 
+use App\Models\Truck;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
-use App\Models\Truck;
 
 class MaxPayloadVolumeRule implements ValidationRule
 {
-    public function __construct(protected ?int $truckId)
-    {
-    }
+    public function __construct(protected ?int $truckId) {}
 
     /**
      * Run the validation rule.
@@ -26,7 +24,7 @@ class MaxPayloadVolumeRule implements ValidationRule
         }
 
         $truck = Truck::find($this->truckId);
-        
+
         if (! $truck) {
             return;
         }

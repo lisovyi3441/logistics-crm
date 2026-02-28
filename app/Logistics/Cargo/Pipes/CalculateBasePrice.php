@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Logistics\Cargo\Pipes;
 
-use Closure;
 use App\Logistics\Cargo\PricingData;
+use Closure;
 
 class CalculateBasePrice
 {
     // E.g. 5 EUR per 1 KG or 100 EUR per 1 CBM, whichever is greater
     public const int PRICE_PER_KG_CENTS = 500;
+
     public const int PRICE_PER_CBM_CENTS = 10000;
 
     public function handle(PricingData $data, Closure $next)

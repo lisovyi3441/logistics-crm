@@ -17,10 +17,10 @@ class CreateOrderAction
         $companyId = $companyIdOverride ?? $user->company_id;
 
         return DB::transaction(function () use ($validatedData, $user, $companyId) {
-            $totalWeight = collect($validatedData['items'])->sum(fn($i) => $i['weight_kg'] * $i['quantity']);
-            $totalCbm = collect($validatedData['items'])->sum(fn($i) => ($i['cbm'] ?? 0) * $i['quantity']);
-            $isDangerous = collect($validatedData['items'])->contains(fn($i) => $i['is_dangerous'] ?? false);
-            
+            $totalWeight = collect($validatedData['items'])->sum(fn ($i) => $i['weight_kg'] * $i['quantity']);
+            $totalCbm = collect($validatedData['items'])->sum(fn ($i) => ($i['cbm'] ?? 0) * $i['quantity']);
+            $isDangerous = collect($validatedData['items'])->contains(fn ($i) => $i['is_dangerous'] ?? false);
+
             $totalDeclaredValueCents = collect($validatedData['items'])->sum(function ($item) {
                 return $item['quantity'] * ($item['declared_value_cents'] ?? 0);
             });
@@ -31,7 +31,7 @@ class CreateOrderAction
                 isDangerous: (bool) $isDangerous,
                 declaredValueCents: (float) $totalDeclaredValueCents,
             );
-            $pipeline = new \App\Logistics\Cargo\PricingPipeline();
+            $pipeline = new \App\Logistics\Cargo\PricingPipeline;
             $pipelineResult = $pipeline->calculate($pricingData);
 
             // Fetch calculated price from Pipeline

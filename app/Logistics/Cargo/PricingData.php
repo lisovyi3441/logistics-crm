@@ -17,12 +17,12 @@ class PricingData
         public float $discountCents = 0,
         public float $taxCents = 0,
         public float $finalPriceCents = 0
-    ) {
-    }
+    ) {}
 
     public function calculateFinalPrice(): float
     {
         $this->finalPriceCents = $this->basePriceCents + $this->surchargeCents + $this->insuranceFeeCents - $this->discountCents + $this->taxCents;
+
         return $this->finalPriceCents;
     }
 }

@@ -22,7 +22,7 @@ class StoreOrderRequest extends FormRequest
         if ($this->has('items') && is_array($this->items)) {
             $items = $this->items;
             foreach ($items as &$item) {
-                if (empty($item['cbm']) && !empty($item['length_cm']) && !empty($item['width_cm']) && !empty($item['height_cm'])) {
+                if (empty($item['cbm']) && ! empty($item['length_cm']) && ! empty($item['width_cm']) && ! empty($item['height_cm'])) {
                     $item['cbm'] = round(($item['length_cm'] * $item['width_cm'] * $item['height_cm']) / 1000000, 4);
                 }
             }
@@ -40,10 +40,10 @@ class StoreOrderRequest extends FormRequest
         $rules = [
             'truck_id' => ['nullable', 'exists:trucks,id'],
             'items' => [
-                'required', 
-                'array', 
-                'min:1', 
-                new \App\Rules\MaxPayloadVolumeRule($this->input('truck_id'))
+                'required',
+                'array',
+                'min:1',
+                new \App\Rules\MaxPayloadVolumeRule($this->input('truck_id')),
             ],
             'items.*.name' => ['required', 'string', 'max:255'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],

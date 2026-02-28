@@ -17,7 +17,7 @@ it('passes validation when payload and volume are within truck limits', function
     ]; // Total: 9500kg, 45cbm
 
     $rule = new MaxPayloadVolumeRule($truck->id);
-    
+
     $passed = true;
     $rule->validate('items', $items, function ($message) use (&$passed) {
         $passed = false;
@@ -38,7 +38,7 @@ it('fails validation when payload weight exceeds truck limits', function () {
     ]; // Total: 11000kg
 
     $rule = new MaxPayloadVolumeRule($truck->id);
-    
+
     $passed = true;
     $errorMessage = '';
     $rule->validate('items', $items, function ($message) use (&$passed, &$errorMessage) {
@@ -62,7 +62,7 @@ it('fails validation when volume exceeds truck limits', function () {
     ]; // Total: 55cbm
 
     $rule = new MaxPayloadVolumeRule($truck->id);
-    
+
     $passed = true;
     $errorMessage = '';
     $rule->validate('items', $items, function ($message) use (&$passed, &$errorMessage) {
@@ -80,7 +80,7 @@ it('passes validation if no truck id is given', function () {
     ];
 
     $rule = new MaxPayloadVolumeRule(null);
-    
+
     $passed = true;
     $rule->validate('items', $items, function ($message) use (&$passed) {
         $passed = false;
