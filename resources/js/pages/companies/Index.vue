@@ -46,7 +46,7 @@ const page = usePage();
 
             <div class="flex flex-col flex-1 min-h-0 border rounded-xl bg-card text-card-foreground shadow-sm">
                 <div class="flex-1 overflow-y-auto min-h-0 rounded-t-xl">
-                    <Table class="whitespace-nowrap h-full">
+                    <Table class="whitespace-nowrap" :class="{ 'h-full': companies.data.length >= companies.meta.per_page }">
                     <TableHeader class="sticky top-0 z-10 bg-card">
                         <TableRow class="bg-muted/50 whitespace-nowrap">
                             <TableHead class="text-center">ID</TableHead>

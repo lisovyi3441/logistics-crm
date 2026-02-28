@@ -73,7 +73,7 @@ const formatMoney = (val: string | number) => {
                     <h3 class="text-lg font-medium text-zinc-900 dark:text-white">Recent Orders</h3>
                 </div>
                 <div class="flex-1 overflow-y-auto min-h-0">
-                    <Table class="whitespace-nowrap md:whitespace-normal h-full">
+                    <Table class="whitespace-nowrap md:whitespace-normal" :class="{ 'h-full': recentOrders.length >= 5 }">
                         <TableHeader class="sticky top-0 z-10 bg-card">
                             <TableRow class="bg-muted/50 whitespace-nowrap">
                                 <TableHead class="font-medium text-center">Order Number</TableHead>
