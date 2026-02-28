@@ -60,7 +60,7 @@ class DatabaseSeeder extends Seeder
                     'name' => 'Item '.Str::random(5),
                     'quantity' => rand(1, 10),
                     'weight_kg' => rand(10, 500) / 10,
-                    'price_cents' => rand(1000, 50000),
+                    'declared_value_cents' => rand(1000, 50000),
                 ]);
             }
         }
@@ -85,7 +85,7 @@ class DatabaseSeeder extends Seeder
                         'name' => 'Item '.Str::random(5),
                         'quantity' => rand(1, 10),
                         'weight_kg' => rand(10, 500) / 10,
-                        'price_cents' => rand(1000, 50000),
+                        'declared_value_cents' => rand(1000, 50000),
                     ]);
                 }
             }
