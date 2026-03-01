@@ -26,6 +26,7 @@ RUN touch .env \
 
 # Install NPM dependencies and build
 RUN npm ci
+ENV WAYFINDER_GENERATE_ON_BUILD=false
 RUN npm run build
 
 # Stage 2: Production Server (FrankenPHP)
