@@ -16,6 +16,14 @@ COPY . .
 # Install PHP dependencies first (Wayfinder plugin needs them)
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
+# Prepare dummy .env with sqlite so artisan commands don't fail during build
+RUN touch .env \
+    && echo "APP_ENV=production" >> .env \
+    && echo "APP_KEY=" >> .env \
+    && echo "DB_CONNECTION=sqlite" >> .env \
+    && touch database/database.sqlite \
+    && php artisan key:generate
+
 # Install NPM dependencies and build
 RUN npm ci
 RUN npm run build
