@@ -23,20 +23,19 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             
-            # Install PHP dependencies
-            docker compose exec -T laravel.test composer install --no-interaction --prefer-dist --optimize-autoloader
+            # Build and start the production container
+            docker compose -f docker-compose.prod.yml up -d --build
             
-            # Build frontend
-            docker compose exec -T laravel.test npm install
-            docker compose exec -T laravel.test npm run build
+            # Wait a few seconds for the container to initialize
+            sleep 5
             
             # Migrate database
-            docker compose exec -T laravel.test php artisan migrate --force
+            docker compose -f docker-compose.prod.yml exec -T app php artisan migrate --force
             
             # Clear caches
-            docker compose exec -T laravel.test php artisan config:cache
-            docker compose exec -T laravel.test php artisan route:cache
-            docker compose exec -T laravel.test php artisan view:cache
+            docker compose -f docker-compose.prod.yml exec -T app php artisan config:cache
+            docker compose -f docker-compose.prod.yml exec -T app php artisan route:cache
+            docker compose -f docker-compose.prod.yml exec -T app php artisan view:cache
             
             # Setup Cron for Laravel Scheduler
-            (crontab -l 2>/dev/null | grep -q "schedule:run") || (crontab -l 2>/dev/null; echo "* * * * * cd ${{ secrets.DO_PROJECT_PATH }} && docker compose exec -T laravel.test php artisan schedule:run >> /dev/null 2>&1") | crontab -
+            (crontab -l 2>/dev/null | grep -q "schedule:run") || (crontab -l 2>/dev/null; echo "* * * * * cd ${{ secrets.DO_PROJECT_PATH }} && docker compose -f docker-compose.prod.yml exec -T app php artisan schedule:run >> /dev/null 2>&1") | crontab -
