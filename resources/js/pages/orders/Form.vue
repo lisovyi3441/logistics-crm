@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { Head, useForm, Link } from '@inertiajs/vue3';
+import { OpenStreetMapProvider } from 'leaflet-geosearch';
 import { Plus, Trash2, MapPin } from 'lucide-vue-next';
+import { ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { OpenStreetMapProvider } from 'leaflet-geosearch';
-import { ref, watch } from 'vue';
 
 const geocoder = new OpenStreetMapProvider();
 const pickupSearch = ref('');

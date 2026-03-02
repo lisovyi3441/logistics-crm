@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Head, useForm, Link } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
+import { Head, useForm } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{
     tariff: any;

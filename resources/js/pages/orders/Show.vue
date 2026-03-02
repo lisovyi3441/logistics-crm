@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import L from 'leaflet';
+import { MapPin } from 'lucide-vue-next';
 import { ref, computed, onMounted } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { MapPin } from 'lucide-vue-next';
-import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 const props = defineProps<{
@@ -98,8 +98,8 @@ onMounted(() => {
         const delivery = [orderData.value.delivery_lat, orderData.value.delivery_lng] as [number, number];
 
         // Add markers
-        const pickupMarker = L.marker(pickup).addTo(map).bindPopup('<b>Pickup</b><br>' + orderData.value.pickup_address);
-        const deliveryMarker = L.marker(delivery).addTo(map).bindPopup('<b>Delivery</b><br>' + orderData.value.delivery_address);
+        L.marker(pickup).addTo(map).bindPopup('<b>Pickup</b><br>' + orderData.value.pickup_address);
+        L.marker(delivery).addTo(map).bindPopup('<b>Delivery</b><br>' + orderData.value.delivery_address);
 
         // Fetch route geometry to draw the polyline smoothly instead of a straight line
         // Since OSRM Service calculates it on the backend, we can just request it from public OSRM for frontend display
