@@ -38,12 +38,12 @@ class StoreOrderRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'truck_id' => ['nullable', 'exists:trucks,id'],
+            'vehicle_type_id' => ['nullable', 'exists:vehicle_types,id'],
             'items' => [
                 'required',
                 'array',
                 'min:1',
-                new \App\Rules\MaxPayloadVolumeRule($this->input('truck_id')),
+                new \App\Rules\MaxPayloadVolumeRule($this->input('vehicle_type_id')),
             ],
             'items.*.name' => ['required', 'string', 'max:255'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
@@ -54,6 +54,12 @@ class StoreOrderRequest extends FormRequest
             'items.*.width_cm' => ['nullable', 'integer', 'min:0'],
             'items.*.height_cm' => ['nullable', 'integer', 'min:0'],
             'items.*.is_dangerous' => ['nullable', 'boolean'],
+            'pickup_address' => ['required', 'string', 'max:500'],
+            'pickup_lat' => ['required', 'numeric', 'min:-90', 'max:90'],
+            'pickup_lng' => ['required', 'numeric', 'min:-180', 'max:180'],
+            'delivery_address' => ['required', 'string', 'max:500'],
+            'delivery_lat' => ['required', 'numeric', 'min:-90', 'max:90'],
+            'delivery_lng' => ['required', 'numeric', 'min:-180', 'max:180'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
 

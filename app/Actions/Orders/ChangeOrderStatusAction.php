@@ -12,7 +12,6 @@ class ChangeOrderStatusAction
 {
     public function execute(Order $order, string $newStatus): Order
     {
-        // Ensure the new status is a valid enum value
         $statusEnum = OrderStatus::tryFrom($newStatus);
 
         if (! $statusEnum) {
@@ -21,13 +20,26 @@ class ChangeOrderStatusAction
             ]);
         }
 
-        // If status is the same, do nothing
+        $user = auth()->user();
+        if ($user !== null && $user->hasRole('manager') && ! $user->hasRole('admin')) {
+            if ($statusEnum !== OrderStatus::CANCELED) {
+                throw ValidationException::withMessages([
+                    'status' => ['Managers can only cancel un-shipped orders.'],
+                ]);
+            }
+            if (! in_array($order->status, [OrderStatus::NEW, OrderStatus::PENDING], true)) {
+                throw ValidationException::withMessages([
+                    'status' => ['Orders already in progress cannot be canceled.'],
+                ]);
+            }
+        }
+
         if ($order->status === $statusEnum) {
             return $order;
         }
 
         if ($order->status && ! $order->status->canTransitionTo($statusEnum)) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'status' => ["Cannot transition from {$order->status->label()} to {$statusEnum->label()}."],
             ]);
         }
@@ -36,7 +48,6 @@ class ChangeOrderStatusAction
         $order->status = $statusEnum;
         $order->save();
 
-        // Log the history
         $order->statusHistories()->create([
             'user_id' => auth()->id(),
             'old_status' => $oldStatus?->value,

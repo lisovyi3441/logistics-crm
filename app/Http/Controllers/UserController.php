@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Company;
+use App\Models\Order;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Arr;
@@ -131,7 +134,7 @@ class UserController extends Controller
             return back()->withErrors(['message' => 'You cannot delete yourself.']);
         }
 
-        if (\App\Models\Order::where('user_id', $user->id)->exists()) {
+        if (Order::where('user_id', $user->id)->exists()) {
             return back()->withErrors([
                 'message' => 'Cannot delete user because they have associated orders. Please reassign or delete the orders first.',
             ]);

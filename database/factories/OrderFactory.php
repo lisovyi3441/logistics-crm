@@ -16,14 +16,44 @@ class OrderFactory extends Factory
 
     public function definition(): array
     {
+        $cities = [
+            ['address' => 'Київ, вул. Хрещатик, 1', 'lat' => 50.4501, 'lng' => 30.5234],
+            ['address' => 'Львів, пл. Ринок, 1', 'lat' => 49.8397, 'lng' => 24.0297],
+            ['address' => 'Одеса, вул. Дерибасівська, 1', 'lat' => 46.4825, 'lng' => 30.7233],
+            ['address' => 'Дніпро, пр. Дмитра Яворницького, 1', 'lat' => 48.4647, 'lng' => 35.0462],
+            ['address' => 'Харків, пл. Свободи, 1', 'lat' => 49.9935, 'lng' => 36.2304],
+            ['address' => 'Вінниця, вул. Соборна, 1', 'lat' => 49.2331, 'lng' => 28.4682],
+            ['address' => 'Івано-Франківськ, вул. Незалежності, 1', 'lat' => 48.9226, 'lng' => 24.7111],
+        ];
+
+        $origin = fake()->randomElement($cities);
+        $dest = fake()->randomElement(array_filter($cities, fn ($c) => $c['address'] !== $origin['address']));
+
         return [
             'user_id' => User::factory(),
             'company_id' => Company::factory(),
             'order_number' => fake()->unique()->bothify('ORD-####-????'),
             'status' => fake()->randomElement(OrderStatus::cases()),
-            'total_price_cents' => fake()->numberBetween(10000, 1000000),
-            'currency' => fake()->randomElement(['USD', 'EUR', 'UAH']),
+            'currency' => 'UAH',
             'notes' => fake()->sentence(),
+
+            // Geospatial Data (Realistic Ukrainian hubs)
+            'pickup_address' => $origin['address'],
+            'pickup_lat' => $origin['lat'],
+            'pickup_lng' => $origin['lng'],
+            'delivery_address' => $dest['address'],
+            'delivery_lat' => $dest['lat'],
+            'delivery_lng' => $dest['lng'],
+            'distance_km' => fake()->randomFloat(2, 50, 800),
+            'transit_time_minutes' => fake()->numberBetween(120, 1440), // 2 hours to 24 hours
+
+            // Detailed Pricing Breakdown (so receipts don't break on seeded data)
+            'total_price_cents' => fake()->numberBetween(50000, 500000),
+            'base_price_cents' => fake()->numberBetween(40000, 400000),
+            'insurance_fee_cents' => fake()->numberBetween(1000, 5000),
+            'surcharge_cents' => 0,
+            'discount_cents' => 0,
+            'tax_cents' => fake()->numberBetween(5000, 50000),
         ];
     }
 }

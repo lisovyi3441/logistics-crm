@@ -3,12 +3,18 @@
 declare(strict_types=1);
 
 use App\Models\Truck;
+use App\Models\VehicleType;
 use App\Rules\MaxPayloadVolumeRule;
 
 it('passes validation when payload and volume are within truck limits', function () {
-    $truck = Truck::factory()->create([
+    $vehicleType = VehicleType::create([
+        'name' => 'Test Vehicle',
         'max_weight_kg' => 10000,
         'max_volume_cbm' => 50,
+        'base_price_per_km_cents' => 100,
+    ]);
+    $truck = Truck::factory()->create([
+        'vehicle_type_id' => $vehicleType->id,
     ]);
 
     $items = [
@@ -27,9 +33,14 @@ it('passes validation when payload and volume are within truck limits', function
 });
 
 it('fails validation when payload weight exceeds truck limits', function () {
-    $truck = Truck::factory()->create([
+    $vehicleType = VehicleType::create([
+        'name' => 'Test Vehicle',
         'max_weight_kg' => 10000,
         'max_volume_cbm' => 50,
+        'base_price_per_km_cents' => 100,
+    ]);
+    $truck = Truck::factory()->create([
+        'vehicle_type_id' => $vehicleType->id,
     ]);
 
     $items = [
@@ -51,9 +62,14 @@ it('fails validation when payload weight exceeds truck limits', function () {
 });
 
 it('fails validation when volume exceeds truck limits', function () {
-    $truck = Truck::factory()->create([
+    $vehicleType = VehicleType::create([
+        'name' => 'Test Vehicle',
         'max_weight_kg' => 10000,
         'max_volume_cbm' => 50,
+        'base_price_per_km_cents' => 100,
+    ]);
+    $truck = Truck::factory()->create([
+        'vehicle_type_id' => $vehicleType->id,
     ]);
 
     $items = [

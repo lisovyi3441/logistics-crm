@@ -34,3 +34,11 @@ yarn-error.log
 /GEMINI.md
 /boost.json
 /roadmap.md
+
+**/caddy
+frankenphp
+frankenphp-worker.php
+
+# Local dev/custom files
+/logistics_crm
+/public/portfolio.html

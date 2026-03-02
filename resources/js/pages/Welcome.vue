@@ -67,7 +67,7 @@ withDefaults(
                             <div class="flex flex-col gap-1">
                                 <p><strong class="font-medium">Admin:</strong> admin@gmail.com</p>
                                 <p><strong class="font-medium">Manager:</strong> manager@gmail.com</p>
-                                <p><strong class="font-medium">Customer:</strong> customer@gmail.com</p>
+                                <p><strong class="font-medium">Observer:</strong> observer@gmail.com</p>
                                 <p class="mt-1 text-[11px] opacity-70">Password for all: <code class="bg-white/50 dark:bg-black/50 px-1 rounded">password</code></p>
                             </div>
                         </div>

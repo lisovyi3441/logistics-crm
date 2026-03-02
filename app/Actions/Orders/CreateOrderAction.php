@@ -4,14 +4,21 @@ declare(strict_types=1);
 
 namespace App\Actions\Orders;
 
+use App\Logistics\Cargo\PricingData;
+use App\Logistics\Cargo\PricingPipeline;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
+use App\Services\Routing\RoutingServiceInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class CreateOrderAction
 {
+    public function __construct(
+        private readonly RoutingServiceInterface $routingService
+    ) {}
+
     public function execute(User $user, array $validatedData, ?int $companyIdOverride = null): Order
     {
         $companyId = $companyIdOverride ?? $user->company_id;
@@ -25,27 +32,57 @@ class CreateOrderAction
                 return $item['quantity'] * ($item['declared_value_cents'] ?? 0);
             });
 
-            $pricingData = new \App\Logistics\Cargo\PricingData(
+            $routeData = ['distance_km' => 1, 'duration_minutes' => 60]; // Defaults
+            if (! empty($validatedData['pickup_lat']) && ! empty($validatedData['pickup_lng']) &&
+                ! empty($validatedData['delivery_lat']) && ! empty($validatedData['delivery_lng'])) {
+
+                $routeData = $this->routingService->getRoute(
+                    (float) $validatedData['pickup_lat'],
+                    (float) $validatedData['pickup_lng'],
+                    (float) $validatedData['delivery_lat'],
+                    (float) $validatedData['delivery_lng']
+                );
+            }
+
+            $pricingData = new PricingData(
                 weightKg: (float) $totalWeight,
                 cbm: (float) $totalCbm,
                 isDangerous: (bool) $isDangerous,
+                distanceKm: (float) $routeData['distance_km'],
                 declaredValueCents: (float) $totalDeclaredValueCents,
             );
-            $pipeline = new \App\Logistics\Cargo\PricingPipeline;
+            $pipeline = new PricingPipeline;
             $pipelineResult = $pipeline->calculate($pricingData);
 
-            // Fetch calculated price from Pipeline
             $totalPriceCents = (int) $pipelineResult->finalPriceCents;
 
             $order = Order::create([
                 'user_id' => $user->id,
                 'company_id' => $companyId,
-                'truck_id' => $validatedData['truck_id'] ?? null,
+                'vehicle_type_id' => $validatedData['vehicle_type_id'] ?? null,
                 'order_number' => 'ORD-'.strtoupper(Str::random(8)),
                 'status' => 'new',
+
+                // Pricing Breakdown
                 'total_price_cents' => $totalPriceCents,
-                'currency' => 'USD', // Keeping USD as default
+                'base_price_cents' => (int) $pipelineResult->basePriceCents,
+                'insurance_fee_cents' => (int) $pipelineResult->insuranceFeeCents,
+                'surcharge_cents' => (int) $pipelineResult->surchargeCents,
+                'discount_cents' => (int) $pipelineResult->discountCents,
+                'tax_cents' => (int) $pipelineResult->taxCents,
+
+                'currency' => 'USD',
                 'notes' => $validatedData['notes'] ?? null,
+
+                // Geospatial / Routing Data
+                'pickup_address' => $validatedData['pickup_address'] ?? null,
+                'pickup_lat' => $validatedData['pickup_lat'] ?? null,
+                'pickup_lng' => $validatedData['pickup_lng'] ?? null,
+                'delivery_address' => $validatedData['delivery_address'] ?? null,
+                'delivery_lat' => $validatedData['delivery_lat'] ?? null,
+                'delivery_lng' => $validatedData['delivery_lng'] ?? null,
+                'distance_km' => $routeData['distance_km'],
+                'transit_time_minutes' => $routeData['duration_minutes'],
             ]);
 
             foreach ($validatedData['items'] as $item) {

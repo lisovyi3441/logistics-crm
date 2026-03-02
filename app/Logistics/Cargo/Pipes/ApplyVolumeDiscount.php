@@ -17,7 +17,7 @@ class ApplyVolumeDiscount
     public function handle(PricingData $data, Closure $next)
     {
         if ($data->cbm > self::CBM_THRESHOLD) {
-            $data->discountCents = ($data->basePriceCents + $data->surchargeCents) * self::DISCOUNT_MULTIPLIER;
+            $data->setDiscountCents(($data->basePriceCents + $data->surchargeCents) * self::DISCOUNT_MULTIPLIER);
         }
 
         return $next($data);

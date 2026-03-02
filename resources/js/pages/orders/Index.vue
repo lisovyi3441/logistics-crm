@@ -14,6 +14,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 // Приймаємо дані
 defineProps<{
     orders: any;
+    can_create: boolean;
 }>();
 
 const breadcrumbs = [
@@ -28,12 +29,6 @@ const formatMoney = (cents: number) => {
     }).format(cents / 100);
 };
 
-const formatDate = (dateString: string) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('uk-UA', {
-        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
-    });
-};
 </script>
 
 <template>
@@ -45,7 +40,7 @@ const formatDate = (dateString: string) => {
             <div class="flex-none flex items-center justify-between">
                 <h2 class="text-2xl font-bold tracking-tight">Orders List</h2>
                 <div class="flex items-center gap-2">
-                    <Link href="/orders/create" class="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors">
+                    <Link v-if="can_create" href="/orders/create" class="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors">
                         Create Order
                     </Link>
                     <div class="rounded-md bg-secondary px-3 py-1 text-sm font-medium border">
@@ -63,6 +58,7 @@ const formatDate = (dateString: string) => {
                                 <TableHead class="text-center">Date</TableHead>
                                 <TableHead class="text-center">Company</TableHead>
                                 <TableHead class="text-center">Manager</TableHead>
+                                <TableHead class="text-center">Route</TableHead>
                                 <TableHead class="text-center">Status</TableHead>
                                 <TableHead class="text-center">Amount</TableHead>
                             </TableRow>
@@ -74,17 +70,25 @@ const formatDate = (dateString: string) => {
                                 </TableCell>
                             </TableRow>
 
-                            <TableRow v-for="order in orders.data" :key="order.id" 
+                            <TableRow v-for="order in orders.data" :key="order.id"
                                 @click="router.visit(`/orders/${order.order_number}`)"
                                 class="cursor-pointer hover:bg-muted/50">
                                 <TableCell class="font-medium font-mono text-zinc-600 dark:text-zinc-300 text-center">
                                     {{ order.order_number }}
                                 </TableCell>
                                 <TableCell class="text-sm text-muted-foreground whitespace-nowrap text-center">
-                                    {{ formatDate(order.created_at) }}
+                                    {{ order.created_at }}
                                 </TableCell>
                                 <TableCell class="font-medium text-center">{{ order.company.name }}</TableCell>
                                 <TableCell class="text-muted-foreground text-center">{{ order.user.name }}</TableCell>
+                                <TableCell class="text-xs text-center text-zinc-600 dark:text-zinc-400">
+                                    <div class="mx-auto flex items-center justify-center gap-1 max-w-[200px] truncate" :title="`${order.pickup_address} -> ${order.delivery_address}`">
+                                        <span class="truncate">{{ order.pickup_address ? order.pickup_address.split(',')[0] : 'TBD' }}</span>
+                                        <svg class="w-3 h-3 text-zinc-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                                        <span class="truncate">{{ order.delivery_address ? order.delivery_address.split(',')[0] : 'TBD' }}</span>
+                                    </div>
+                                    <div class="text-[10px] text-zinc-400 mt-0.5" v-if="order.distance_km">{{ order.distance_km }} km</div>
+                                </TableCell>
                                 <TableCell class="text-center">
                                     <Badge variant="outline" :class="[order.status.color, 'whitespace-nowrap flex-shrink-0 min-w-max']">
                                         {{ order.status.label }}

@@ -18,8 +18,7 @@ class TruckFactory extends Factory
     {
         return [
             'name' => $this->faker->randomElement(['Van (Sprinter)', 'Lorry (7.5t)', 'Standard Trailer (13.6m)', 'Mega Trailer', 'Refrigerated Trailer']),
-            'max_weight_kg' => $this->faker->randomFloat(2, 1000, 24000),
-            'max_volume_cbm' => $this->faker->randomFloat(2, 12, 120),
+            'license_plate' => $this->faker->unique()->regexify('[A-Z]{2}\s\d{4}\s[A-Z]{2}'),
         ];
     }
 }

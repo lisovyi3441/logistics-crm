@@ -3,6 +3,7 @@
 use App\Models\Company;
 use App\Models\Order;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 use Spatie\Permission\Models\Role;
 
 use function Pest\Laravel\actingAs;
@@ -10,7 +11,7 @@ use function Pest\Laravel\actingAs;
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin']);
     Role::firstOrCreate(['name' => 'manager']);
-    Role::firstOrCreate(['name' => 'customer']);
+    Role::firstOrCreate(['name' => 'observer']);
 
     $this->admin = User::factory()->create();
     $this->admin->assignRole('admin');
@@ -27,6 +28,12 @@ it('allows admin to create order for any company', function () {
         ->post('/orders', [
             'company_id' => $targetCompany->id,
             'notes' => 'Admin order',
+            'pickup_address' => 'Kyiv',
+            'pickup_lat' => 50.45,
+            'pickup_lng' => 30.52,
+            'delivery_address' => 'Lviv',
+            'delivery_lat' => 49.83,
+            'delivery_lng' => 24.02,
             'items' => [
                 [
                     'name' => 'Item 1',
@@ -62,6 +69,12 @@ it('forces manager to create order for their own company', function () {
     $response = actingAs($this->manager)
         ->post('/orders', [
             'company_id' => $otherCompany->id, // Should be ignored or overridden
+            'pickup_address' => 'Kyiv',
+            'pickup_lat' => 50.45,
+            'pickup_lng' => 30.52,
+            'delivery_address' => 'Lviv',
+            'delivery_lat' => 49.83,
+            'delivery_lng' => 24.02,
             'items' => [
                 [
                     'name' => 'Manager Item',
@@ -116,17 +129,33 @@ it('validates each item fields', function () {
 });
 
 it('calculates total price correctly', function () {
+    Http::fake([
+        'router.project-osrm.org/*' => Http::response([
+            'routes' => [
+                ['distance' => 50000, 'duration' => 3600, 'geometry' => ''],
+            ],
+        ], 200),
+    ]);
+
     actingAs($this->admin)
         ->post('/orders', [
             'company_id' => $this->company->id,
+            'pickup_address' => 'Kyiv',
+            'pickup_lat' => 50.45,
+            'pickup_lng' => 30.52,
+            'delivery_address' => 'Lviv',
+            'delivery_lat' => 49.83,
+            'delivery_lng' => 24.02,
             'items' => [
                 ['name' => 'A', 'quantity' => 2, 'weight_kg' => 1, 'declared_value_cents' => 1000], // 2000
                 ['name' => 'B', 'quantity' => 1, 'weight_kg' => 1, 'declared_value_cents' => 500],  // 500
             ],
         ]);
 
+    // Distance 50km * 100cents = 5000 base. Insurance 1% of 2500 = 25. Subtotal = 5025.
+    // Default Tax = 20% of 5025 = 1005. Total = 6030 cents.
     $this->assertDatabaseHas('orders', [
-        'total_price_cents' => 1875, // Base 1500 (3kg*500) + 1% Insurance of 2500 (25) + 23% Tax of 1525 (350.75 floor to 350)
+        'total_price_cents' => 6030,
     ]);
 });
 
@@ -139,34 +168,34 @@ it('allows managers to update order status for their company', function () {
 
     $response = actingAs($this->manager)
         ->put("/orders/{$order->order_number}/status", [
-            'status' => 'pending',
+            'status' => 'canceled',
         ]);
 
     $response->assertRedirect();
 
     $this->assertDatabaseHas('orders', [
         'id' => $order->id,
-        'status' => 'pending',
+        'status' => 'canceled',
     ]);
 
     $this->assertDatabaseHas('order_status_histories', [
         'order_id' => $order->id,
-        'new_status' => 'pending',
+        'new_status' => 'canceled',
         'user_id' => $this->manager->id,
     ]);
 });
 
 it('forbids customers from updating order status', function () {
-    $customer = User::factory()->create(['company_id' => $this->company->id]);
-    $customer->assignRole('customer');
+    $observer = User::factory()->create(['company_id' => $this->company->id]);
+    $observer->assignRole('observer');
 
     $order = Order::factory()->create([
         'company_id' => $this->company->id,
-        'user_id' => $customer->id,
+        'user_id' => $observer->id,
         'status' => 'new',
     ]);
 
-    $response = actingAs($customer)
+    $response = actingAs($observer)
         ->put("/orders/{$order->order_number}/status", [
             'status' => 'pending',
         ]);
@@ -180,32 +209,32 @@ it('forbids customers from updating order status', function () {
 });
 
 it('scopes order index correctly for customers', function () {
-    $customer1 = User::factory()->create(['company_id' => $this->company->id]);
-    $customer1->assignRole('customer');
+    $observer1 = User::factory()->create(['company_id' => $this->company->id]);
+    $observer1->assignRole('observer');
 
-    $customer2 = User::factory()->create(['company_id' => $this->company->id]);
-    $customer2->assignRole('customer');
+    $observer2 = User::factory()->create(['company_id' => $this->company->id]);
+    $observer2->assignRole('observer');
 
-    Order::factory()->create(['user_id' => $customer1->id, 'company_id' => $this->company->id]);
-    Order::factory()->create(['user_id' => $customer2->id, 'company_id' => $this->company->id]);
+    Order::factory()->create(['user_id' => $observer1->id, 'company_id' => $this->company->id]);
+    Order::factory()->create(['user_id' => $observer2->id, 'company_id' => $this->company->id]);
 
-    // Customer 1 should only see 1 order
-    actingAs($customer1)
+    // Observer 1 should see all 2 orders in their company
+    actingAs($observer1)
         ->get('/orders')
         ->assertInertia(fn ($page) => $page
-            ->has('orders.data', 1)
+            ->has('orders.data', 2)
         );
 });
 
 it('scopes order index correctly for managers', function () {
-    $customer1 = User::factory()->create(['company_id' => $this->company->id]);
-    $customer1->assignRole('customer');
+    $observer1 = User::factory()->create(['company_id' => $this->company->id]);
+    $observer1->assignRole('observer');
 
-    $customer2 = User::factory()->create(['company_id' => $this->company->id]);
-    $customer2->assignRole('customer');
+    $observer2 = User::factory()->create(['company_id' => $this->company->id]);
+    $observer2->assignRole('observer');
 
-    Order::factory()->create(['user_id' => $customer1->id, 'company_id' => $this->company->id]);
-    Order::factory()->create(['user_id' => $customer2->id, 'company_id' => $this->company->id]);
+    Order::factory()->create(['user_id' => $observer1->id, 'company_id' => $this->company->id]);
+    Order::factory()->create(['user_id' => $observer2->id, 'company_id' => $this->company->id]);
 
     // Manager should see 2 orders
     actingAs($this->manager)

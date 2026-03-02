@@ -23,10 +23,9 @@ class DashboardController extends Controller
 
         return Inertia::render('Dashboard', [
             'stats' => $this->dashboardService->getStats($user),
-            'recentOrders' => collect($this->dashboardService->getRecentOrders(10, $user))
-                ->map(fn ($order) => array_merge($order, [
-                    'url' => route('orders.show', $order['order_number']),
-                ])),
+            'recentOrders' => array_map(fn ($order) => array_merge($order, [
+                'url' => route('orders.show', $order['order_number']),
+            ]), $this->dashboardService->getRecentOrders(10, $user)),
         ]);
     }
 }

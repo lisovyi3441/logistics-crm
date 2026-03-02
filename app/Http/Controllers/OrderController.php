@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Actions\Orders\AssignTruckAction;
 use App\Actions\Orders\ChangeOrderStatusAction;
+use App\Actions\Orders\CreateOrderAction;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Company;
 use App\Models\Order;
 use App\Models\Truck;
+use App\Models\VehicleType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -26,22 +29,16 @@ class OrderController extends Controller
 
         // RBAC Scoping:
         // Admin: all orders
-        // Manager: all orders in their company
-        // Customer: only their own orders
-        if ($user->hasRole('manager')) {
+        // Manager & Observer: all orders in their company
+        if ($user && ! $user->hasRole('admin')) {
             $query->where('company_id', $user->company_id);
-        } elseif ($user->hasRole('customer')) {
-            $query->where('user_id', $user->id);
-        } elseif (! $user->hasRole('admin')) {
-            // Safety fallback for other roles if they somehow bypass viewAny
-            $query->where('id', 0);
         }
 
         $orders = $query->paginate(10);
 
         return Inertia::render('orders/Index', [
             'orders' => OrderResource::collection($orders),
-            'can_create' => true, // Simple flag for UI
+            'can_create' => $user && $user->can('create', Order::class),
         ]);
     }
 
@@ -55,17 +52,17 @@ class OrderController extends Controller
             $companies = Company::select('id', 'name')->get();
         }
 
-        $trucks = Truck::get(['id', 'name', 'max_weight_kg', 'max_volume_cbm']);
+        $vehicleTypes = VehicleType::get(['id', 'name', 'max_weight_kg', 'max_volume_cbm']);
 
         return Inertia::render('orders/Form', [
             'companies' => $companies,
-            'trucks' => $trucks,
+            'vehicleTypes' => $vehicleTypes,
             'is_admin' => $user->hasRole('admin'),
             'default_company_id' => $user->company_id,
         ]);
     }
 
-    public function store(StoreOrderRequest $request, \App\Actions\Orders\CreateOrderAction $action): RedirectResponse
+    public function store(StoreOrderRequest $request, CreateOrderAction $action): RedirectResponse
     {
         $this->authorize('create', Order::class);
         $user = auth()->user();
@@ -83,10 +80,17 @@ class OrderController extends Controller
         $this->authorize('view', $order);
         $user = auth()->user();
 
-        $order->load(['company', 'user', 'items', 'statusHistories.user']);
+        $order->load(['company', 'user', 'items', 'statusHistories.user', 'truck', 'vehicleType']);
+
+        $trucks = [];
+        if ($user->hasRole('admin')) {
+            $trucks = Truck::get(['id', 'name']);
+        }
 
         return Inertia::render('orders/Show', [
             'order' => new OrderResource($order),
+            'trucks' => $trucks,
+            'is_admin' => $user->hasRole('admin'),
         ]);
     }
 
@@ -100,5 +104,18 @@ class OrderController extends Controller
         $action->execute($order, $validated['status']);
 
         return back();
+    }
+
+    public function assignTruck(Request $request, Order $order, AssignTruckAction $action): RedirectResponse
+    {
+        $this->authorize('updateStatus', $order);
+
+        $validated = $request->validate([
+            'truck_id' => ['required', 'integer'],
+        ]);
+
+        $action->execute($order, (int) $validated['truck_id']);
+
+        return back()->with('success', 'Truck assigned successfully.');
     }
 }

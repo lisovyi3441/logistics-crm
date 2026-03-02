@@ -42,9 +42,8 @@ enum OrderStatus: string
         return match ($this) {
             self::NEW => [self::PENDING, self::CANCELED],
             self::PENDING => [self::IN_TRANSIT, self::CANCELED],
-            self::IN_TRANSIT => [self::DELIVERED], // Usually can't cancel if already on the road, or maybe you can? Let's say no for strictness
-            self::DELIVERED => [], // Final state
-            self::CANCELED => [], // Final state
+            self::IN_TRANSIT => [self::DELIVERED],
+            self::DELIVERED, self::CANCELED => [],
         };
     }
 

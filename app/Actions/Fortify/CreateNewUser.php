@@ -34,7 +34,7 @@ class CreateNewUser implements CreatesNewUsers
             'company_id' => $company->id,
         ]);
 
-        $user->assignRole('customer');
+        $user->assignRole('observer');
 
         return $user;
     }

@@ -20,10 +20,30 @@ class OrderResource extends JsonResource
             'created_at' => $this->created_at, // Можна відформатувати тут ->format('d.m.Y H:i')
             'total_price_cents' => $this->total_price_cents,
 
+            // Detailed Pricing Breakdown
+            'base_price_cents' => $this->base_price_cents,
+            'insurance_fee_cents' => $this->insurance_fee_cents,
+            'surcharge_cents' => $this->surcharge_cents,
+            'discount_cents' => $this->discount_cents,
+            'tax_cents' => $this->tax_cents,
+
+            // Geospatial Routing Data
+            'pickup_address' => $this->pickup_address,
+            'delivery_address' => $this->delivery_address,
+            'distance_km' => (float) $this->distance_km,
+            'transit_time_minutes' => (int) $this->transit_time_minutes,
+
             'truck' => $this->whenLoaded('truck', function () {
                 return [
                     'id' => $this->truck->id,
                     'name' => $this->truck->name,
+                ];
+            }),
+
+            'vehicle_type' => $this->whenLoaded('vehicleType', function () {
+                return [
+                    'id' => $this->vehicleType->id,
+                    'name' => $this->vehicleType->name,
                 ];
             }),
 
@@ -38,10 +58,17 @@ class OrderResource extends JsonResource
                 'label' => $this->status->label(),
                 'color' => $this->status->color(),
                 'value' => $this->status->value,
-                'allowed_transitions' => collect($this->status->allowedTransitions())->map(fn ($st) => [
-                    'value' => $st->value,
-                    'label' => $st->label(),
-                ]),
+                'allowed_transitions' => array_map(
+                    fn ($st) => ['value' => $st->value, 'label' => $st->label()],
+                    array_values(array_filter($this->status->allowedTransitions(), function ($st) {
+                        $user = auth()->user();
+                        if ($user && $user->hasRole('manager') && ! $user->hasRole('admin')) {
+                            return $st->value === 'canceled' && in_array($this->status->value, ['new', 'pending'], true);
+                        }
+
+                        return true;
+                    }))
+                ),
             ],
 
             'can' => [

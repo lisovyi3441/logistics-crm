@@ -1,20 +1,106 @@
 <script setup lang="ts">
 import { Head, useForm, Link } from '@inertiajs/vue3';
-import { Plus, Trash2 } from 'lucide-vue-next';
+import { Plus, Trash2, MapPin } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { OpenStreetMapProvider } from 'leaflet-geosearch';
+import { ref, watch } from 'vue';
+
+const geocoder = new OpenStreetMapProvider();
+const pickupSearch = ref('');
+const deliverySearch = ref('');
+const pickupResults = ref<any[]>([]);
+const deliveryResults = ref<any[]>([]);
+const isSearchingPickup = ref(false);
+const isSearchingDelivery = ref(false);
+const showPickupDropdown = ref(false);
+const showDeliveryDropdown = ref(false);
+
+const searchAddress = async (query: string, type: 'pickup' | 'delivery') => {
+    if (query.length < 3) return;
+    
+    if (type === 'pickup') {
+        isSearchingPickup.value = true;
+        showPickupDropdown.value = true;
+        const results = await geocoder.search({ query });
+        pickupResults.value = results;
+        isSearchingPickup.value = false;
+    } else {
+        isSearchingDelivery.value = true;
+        showDeliveryDropdown.value = true;
+        const results = await geocoder.search({ query });
+        deliveryResults.value = results;
+        isSearchingDelivery.value = false;
+    }
+};
+
+let pickupTimeout: NodeJS.Timeout;
+let deliveryTimeout: NodeJS.Timeout;
+
+watch(pickupSearch, (newVal) => {
+    if (newVal === form.pickup_address) return; // Skip if changed by selection
+    clearTimeout(pickupTimeout);
+    pickupTimeout = setTimeout(() => searchAddress(newVal, 'pickup'), 300);
+});
+
+watch(deliverySearch, (newVal) => {
+    if (newVal === form.delivery_address) return; // Skip if changed by selection
+    clearTimeout(deliveryTimeout);
+    deliveryTimeout = setTimeout(() => searchAddress(newVal, 'delivery'), 300);
+});
+
+const selectAddress = (result: any, type: 'pickup' | 'delivery') => {
+    if (type === 'pickup') {
+        form.pickup_address = result.label;
+        form.pickup_lat = result.y;
+        form.pickup_lng = result.x;
+        pickupSearch.value = result.label;
+        pickupResults.value = [];
+        showPickupDropdown.value = false;
+    } else {
+        form.delivery_address = result.label;
+        form.delivery_lat = result.y;
+        form.delivery_lng = result.x;
+        deliverySearch.value = result.label;
+        deliveryResults.value = [];
+        showDeliveryDropdown.value = false;
+    }
+};
+
+const hideDropdown = (type: 'pickup' | 'delivery') => {
+    setTimeout(() => {
+        if (type === 'pickup') showPickupDropdown.value = false;
+        if (type === 'delivery') showDeliveryDropdown.value = false;
+    }, 200);
+};
+
+const handleEnter = (type: 'pickup' | 'delivery', event: Event) => {
+    event.preventDefault();
+    if (type === 'pickup' && pickupResults.value.length > 0) {
+        selectAddress(pickupResults.value[0], 'pickup');
+    } else if (type === 'delivery' && deliveryResults.value.length > 0) {
+        selectAddress(deliveryResults.value[0], 'delivery');
+    }
+    hideDropdown(type);
+};
 
 const props = defineProps<{
     companies: Array<{ id: number; name: string }>;
-    trucks: Array<{ id: number; name: string; max_weight_kg: number; max_volume_cbm: number }>;
+    vehicleTypes: Array<{ id: number; name: string; max_weight_kg: number; max_volume_cbm: number }>;
     is_admin: boolean;
     default_company_id?: number;
 }>();
 
 const form = useForm({
     company_id: props.default_company_id || '',
-    truck_id: '',
+    vehicle_type_id: '',
     notes: '',
+    pickup_address: '',
+    pickup_lat: null as number | null,
+    pickup_lng: null as number | null,
+    delivery_address: '',
+    delivery_lat: null as number | null,
+    delivery_lng: null as number | null,
     items: [
         { name: '', quantity: 1, weight_kg: 0, declared_value_cents: 0, cbm: 0, length_cm: '', width_cm: '', height_cm: '', is_dangerous: false }
     ]
@@ -73,14 +159,14 @@ const submit = () => {
                         </div>
 
                         <div>
-                            <label for="truck_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Assign Truck (Optional)</label>
-                            <select id="truck_id" v-model="form.truck_id" class="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
-                                <option value="">No truck assigned</option>
-                                <option v-for="truck in trucks" :key="truck.id" :value="truck.id">
-                                    {{ truck.name }} (Max: {{ truck.max_weight_kg }}kg / {{ truck.max_volume_cbm }} cbm)
+                            <label for="vehicle_type_id" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Requested Vehicle Type (Optional)</label>
+                            <select id="vehicle_type_id" v-model="form.vehicle_type_id" class="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                                <option value="">Any vehicle format</option>
+                                <option v-for="vt in vehicleTypes" :key="vt.id" :value="vt.id">
+                                    {{ vt.name }} (Max: {{ vt.max_weight_kg }}kg / {{ vt.max_volume_cbm || 'Unlimited' }} cbm)
                                 </option>
                             </select>
-                            <p v-if="form.errors.truck_id" class="mt-1 text-sm text-red-600">{{ form.errors.truck_id }}</p>
+                            <p v-if="form.errors.vehicle_type_id" class="mt-1 text-sm text-red-600">{{ form.errors.vehicle_type_id }}</p>
                         </div>
 
                         <div class="sm:col-span-2">
@@ -88,6 +174,84 @@ const submit = () => {
                             <textarea id="notes" v-model="form.notes" rows="1" class="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"></textarea>
                             <p v-if="form.errors.notes" class="mt-1 text-sm text-red-600">{{ form.errors.notes }}</p>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Locational Data -->
+                <div class="rounded-xl border border-sidebar-border bg-white p-6 shadow-sm dark:bg-zinc-900 dark:border-zinc-800">
+                    <h3 class="text-lg font-semibold mb-4 border-b pb-2 flex items-center gap-2">
+                        <MapPin class="w-5 h-5 text-indigo-500"/>
+                        Route Details
+                    </h3>
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 relative">
+                        <!-- Origin Input -->
+                        <div class="relative">
+                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Pickup Address *</label>
+                            <input type="text" v-model="pickupSearch" 
+                                @focus="showPickupDropdown = true" 
+                                @blur="hideDropdown('pickup')" 
+                                @keydown.esc="showPickupDropdown = false"
+                                @keydown.enter="(e) => handleEnter('pickup', e)"
+                                placeholder="Search for origin..." 
+                                class="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                            <input type="hidden" v-model="form.pickup_address">
+                            
+                            <!-- Loading Indicator -->
+                            <div v-if="isSearchingPickup" class="absolute z-10 mt-1 w-full bg-white dark:bg-zinc-800 shadow-lg border border-zinc-200 dark:border-zinc-700 rounded-md py-2 px-3 text-sm text-zinc-500">
+                                Searching...
+                            </div>
+                            
+                            <!-- Origin Autocomplete Results -->
+                            <div v-if="!isSearchingPickup && showPickupDropdown && pickupResults.length > 0" class="absolute z-10 mt-1 w-full bg-white dark:bg-zinc-800 shadow-lg border border-zinc-200 dark:border-zinc-700 rounded-md max-h-48 overflow-auto">
+                                <ul class="py-1">
+                                    <li v-for="result in pickupResults" :key="result.x" @click="selectAddress(result, 'pickup')" class="px-3 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer text-zinc-700 dark:text-zinc-300 border-b last:border-0 dark:border-zinc-700">
+                                        {{ result.label }}
+                                    </li>
+                                </ul>
+                            </div>
+                            <div v-if="!isSearchingPickup && showPickupDropdown && pickupSearch.length >= 3 && pickupResults.length === 0" class="absolute z-10 mt-1 w-full bg-white dark:bg-zinc-800 shadow-lg border border-zinc-200 dark:border-zinc-700 rounded-md py-2 px-3 text-sm text-zinc-500">
+                                No results found
+                            </div>
+                            <!-- Error display -->
+                            <p v-if="form.errors.pickup_address" class="mt-1 text-sm text-red-600">{{ form.errors.pickup_address }}</p>
+                        </div>
+
+                        <!-- Destination Input -->
+                        <div class="relative">
+                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Delivery Address *</label>
+                            <input type="text" v-model="deliverySearch" 
+                                @focus="showDeliveryDropdown = true" 
+                                @blur="hideDropdown('delivery')" 
+                                @keydown.esc="showDeliveryDropdown = false"
+                                @keydown.enter="(e) => handleEnter('delivery', e)"
+                                placeholder="Search for destination..." 
+                                class="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white">
+                            <input type="hidden" v-model="form.delivery_address">
+                            
+                            <!-- Loading Indicator -->
+                            <div v-if="isSearchingDelivery" class="absolute z-10 mt-1 w-full bg-white dark:bg-zinc-800 shadow-lg border border-zinc-200 dark:border-zinc-700 rounded-md py-2 px-3 text-sm text-zinc-500">
+                                Searching...
+                            </div>
+                            
+                            <!-- Destination Autocomplete Results -->
+                            <div v-if="!isSearchingDelivery && showDeliveryDropdown && deliveryResults.length > 0" class="absolute z-10 mt-1 w-full bg-white dark:bg-zinc-800 shadow-lg border border-zinc-200 dark:border-zinc-700 rounded-md max-h-48 overflow-auto">
+                                <ul class="py-1">
+                                    <li v-for="result in deliveryResults" :key="result.x" @click="selectAddress(result, 'delivery')" class="px-3 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer text-zinc-700 dark:text-zinc-300 border-b last:border-0 dark:border-zinc-700">
+                                        {{ result.label }}
+                                    </li>
+                                </ul>
+                            </div>
+                            <div v-if="!isSearchingDelivery && showDeliveryDropdown && deliverySearch.length >= 3 && deliveryResults.length === 0" class="absolute z-10 mt-1 w-full bg-white dark:bg-zinc-800 shadow-lg border border-zinc-200 dark:border-zinc-700 rounded-md py-2 px-3 text-sm text-zinc-500">
+                                No results found
+                            </div>
+                            <!-- Error display -->
+                            <p v-if="form.errors.delivery_address" class="mt-1 text-sm text-red-600">{{ form.errors.delivery_address }}</p>
+                        </div>
+                    </div>
+                    <!-- Coordinates confirmation -->
+                    <div v-if="form.pickup_lat && form.delivery_lat" class="mt-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 text-xs rounded border border-indigo-100 dark:border-indigo-800 flex justify-between">
+                        <div><strong>Origin:</strong> {{ form.pickup_lat }}, {{ form.pickup_lng }}</div>
+                        <div><strong>Dest:</strong> {{ form.delivery_lat }}, {{ form.delivery_lng }}</div>
                     </div>
                 </div>
 

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('trucks', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('license_plate')->unique()->nullable();
             $table->decimal('max_weight_kg', 10, 2);
             $table->decimal('max_volume_cbm', 8, 2);
             $table->timestamps();

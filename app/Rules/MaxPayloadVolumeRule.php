@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Rules;
 
-use App\Models\Truck;
+use App\Models\VehicleType;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 
 class MaxPayloadVolumeRule implements ValidationRule
 {
-    public function __construct(protected ?int $truckId) {}
+    public function __construct(protected ?int $vehicleTypeId) {}
 
     /**
      * Run the validation rule.
@@ -19,13 +19,13 @@ class MaxPayloadVolumeRule implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (! $this->truckId || ! is_array($value)) {
+        if (! $this->vehicleTypeId || ! is_array($value)) {
             return;
         }
 
-        $truck = Truck::find($this->truckId);
+        $vehicleType = VehicleType::find($this->vehicleTypeId);
 
-        if (! $truck) {
+        if (! $vehicleType) {
             return;
         }
 
@@ -37,12 +37,13 @@ class MaxPayloadVolumeRule implements ValidationRule
             $totalCbm += (float) ($item['cbm'] ?? 0);
         }
 
-        if ($totalWeight > $truck->max_weight_kg) {
-            $fail("The total payload weight ({$totalWeight}kg) exceeds the maximum capacity of the selected truck ({$truck->max_weight_kg}kg).");
+        if ($totalWeight > $vehicleType->max_weight_kg) {
+            $fail("The total payload weight ({$totalWeight}kg) exceeds the maximum capacity of the selected vehicle type ({$vehicleType->max_weight_kg}kg).");
         }
 
-        if ($totalCbm > $truck->max_volume_cbm) {
-            $fail("The total volume ({$totalCbm} cbm) exceeds the maximum capacity of the selected truck ({$truck->max_volume_cbm} cbm).");
+        $maxVol = (float) $vehicleType->max_volume_cbm;
+        if ($maxVol > 0 && $totalCbm > $maxVol) {
+            $fail("The total volume ({$totalCbm} cbm) exceeds the maximum capacity of the selected vehicle type ({$maxVol} cbm).");
         }
     }
 }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Package, Building, Users } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Package, Building, Users, Truck, Settings } from 'lucide-vue-next';
 import { computed } from 'vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -41,6 +41,16 @@ const mainNavItems = computed<NavItem[]>(() => {
     ];
 
     if (isAdmin.value) {
+        items.push({
+            title: 'Fleet',
+            href: '/trucks',
+            icon: Truck,
+        });
+        items.push({
+            title: 'Tariffs / Pricing',
+            href: '/tariffs',
+            icon: Settings,
+        });
         items.push({
             title: 'Companies',
             href: '/companies',

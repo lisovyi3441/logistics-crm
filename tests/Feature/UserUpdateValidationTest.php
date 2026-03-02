@@ -8,7 +8,7 @@ use function Pest\Laravel\actingAs;
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin']);
     Role::firstOrCreate(['name' => 'manager']);
-    Role::firstOrCreate(['name' => 'customer']);
+    Role::firstOrCreate(['name' => 'observer']);
 
     $this->admin = User::factory()->create();
     $this->admin->assignRole('admin');
@@ -20,7 +20,7 @@ it('allows admin to update user role without changing email', function () {
         'email' => 'existing@google.com',
         'company_id' => $company->id,
     ]);
-    $user->assignRole('customer');
+    $user->assignRole('observer');
 
     $response = actingAs($this->admin)
         ->put("/users/{$user->id}", [
