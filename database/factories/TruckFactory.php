@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\VehicleType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,8 +18,9 @@ class TruckFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->randomElement(['Van (Sprinter)', 'Lorry (7.5t)', 'Standard Trailer (13.6m)', 'Mega Trailer', 'Refrigerated Trailer']),
-            'license_plate' => $this->faker->unique()->regexify('[A-Z]{2}\s\d{4}\s[A-Z]{2}'),
+            'name' => $this->faker->company . ' Truck',
+            'license_plate' => strtoupper($this->faker->lexify('??')) . ' ' . $this->faker->numerify('####') . ' ' . strtoupper($this->faker->lexify('??')),
+            'vehicle_type_id' => VehicleType::factory(),
         ];
     }
 }

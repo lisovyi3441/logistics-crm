@@ -6,25 +6,21 @@ namespace App\Actions\Orders;
 
 use App\Enums\OrderStatus;
 use App\Models\Order;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class ChangeOrderStatusAction
 {
     public function execute(Order $order, string $newStatus): Order
     {
-        $statusEnum = OrderStatus::tryFrom($newStatus);
-
-        if (! $statusEnum) {
-            throw ValidationException::withMessages([
-                'status' => ['Invalid order status.'],
-            ]);
-        }
+        $statusEnum = OrderStatus::from($newStatus);
 
         $user = auth()->user();
-        if ($user !== null && $user->hasRole('manager') && ! $user->hasRole('admin')) {
-            if ($statusEnum !== OrderStatus::CANCELED) {
+        if ($user !== null && ! $user->can(\App\Enums\Permissions::UPDATE_ORDER_STATUS->value)) {
+            // If they can't do arbitrary updates, meaning they can only CANCEL
+            if ($statusEnum !== OrderStatus::CANCELED || ! $user->can(\App\Enums\Permissions::CANCEL_ORDERS->value)) {
                 throw ValidationException::withMessages([
-                    'status' => ['Managers can only cancel un-shipped orders.'],
+                    'status' => ['You are not authorized to change the status to this value.'],
                 ]);
             }
             if (! in_array($order->status, [OrderStatus::NEW, OrderStatus::PENDING], true)) {
@@ -44,17 +40,19 @@ class ChangeOrderStatusAction
             ]);
         }
 
-        $oldStatus = $order->status;
-        $order->status = $statusEnum;
-        $order->save();
+        return DB::transaction(function () use ($order, $statusEnum) {
+            $oldStatus = $order->status;
+            $order->status = $statusEnum;
+            $order->save();
 
-        $order->statusHistories()->create([
-            'user_id' => auth()->id(),
-            'old_status' => $oldStatus?->value,
-            'new_status' => $statusEnum->value,
-            'comment' => 'Status manually changed via system.',
-        ]);
+            $order->statusHistories()->create([
+                'user_id' => auth()->id(),
+                'old_status' => $oldStatus?->value,
+                'new_status' => $statusEnum->value,
+                'comment' => 'Status manually changed via system.',
+            ]);
 
-        return $order;
+            return $order;
+        });
     }
 }

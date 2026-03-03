@@ -14,7 +14,30 @@ class Order extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'user_id',
+        'company_id',
+        'order_number',
+        'status',
+        'base_price_cents',
+        'insurance_fee_cents',
+        'surcharge_cents',
+        'discount_cents',
+        'tax_cents',
+        'total_price_cents',
+        'currency',
+        'notes',
+        'pickup_address',
+        'pickup_lat',
+        'pickup_lng',
+        'delivery_address',
+        'delivery_lat',
+        'delivery_lng',
+        'distance_km',
+        'transit_time_minutes',
+        'truck_id',
+        'vehicle_type_id',
+    ];
 
     protected function casts(): array
     {

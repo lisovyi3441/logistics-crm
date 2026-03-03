@@ -24,6 +24,8 @@ class UserController extends Controller
      */
     public function index(): Response
     {
+        abort_if(! auth()->user()->can(\App\Enums\Permissions::VIEW_USERS->value), 403);
+
         $users = User::with(['company', 'roles'])->latest()->paginate(10);
 
         return Inertia::render('users/Index', [
@@ -36,6 +38,8 @@ class UserController extends Controller
      */
     public function create(): Response
     {
+        abort_if(! auth()->user()->can(\App\Enums\Permissions::CREATE_USERS->value), 403);
+
         return Inertia::render('users/Form', [
             'user' => null,
             'companies' => Company::select('id', 'name')->orderBy('name')->get(),
@@ -74,6 +78,8 @@ class UserController extends Controller
      */
     public function show(User $user): RedirectResponse
     {
+        abort_if(! auth()->user()->can(\App\Enums\Permissions::VIEW_USERS->value), 403);
+
         return redirect()->route('users.edit', $user);
     }
 
@@ -82,6 +88,8 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
+        abort_if(! auth()->user()->can(\App\Enums\Permissions::EDIT_USERS->value), 403);
+
         if ($user->id === auth()->id()) {
             return redirect()->route('users.index')->withErrors(['message' => 'You cannot edit your own role/company here. Use the Profile settings.']);
         }
@@ -130,6 +138,8 @@ class UserController extends Controller
      */
     public function destroy(User $user): RedirectResponse
     {
+        abort_if(! auth()->user()->can(\App\Enums\Permissions::DELETE_USERS->value), 403);
+
         if ($user->id === auth()->id()) {
             return back()->withErrors(['message' => 'You cannot delete yourself.']);
         }

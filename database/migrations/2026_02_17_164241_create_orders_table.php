@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('order_number')->unique();
             $table->string('status')->default('new')->index();
             $table->unsignedBigInteger('total_price_cents');
-            $table->string('currency', 3)->default('USD');
+            $table->string('currency', 3)->default('UAH');
             $table->string('notes')->nullable();
             $table->timestamps();
         });

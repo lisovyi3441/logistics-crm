@@ -19,6 +19,8 @@ class CompanyController extends Controller
      */
     public function index(): Response
     {
+        abort_if(! auth()->user()->can(\App\Enums\Permissions::VIEW_COMPANIES->value), 403);
+
         $companies = Company::withCount(['users', 'orders'])->latest()->paginate(10);
 
         return Inertia::render('companies/Index', [
@@ -31,6 +33,8 @@ class CompanyController extends Controller
      */
     public function create(): Response
     {
+        abort_if(! auth()->user()->can(\App\Enums\Permissions::CREATE_COMPANIES->value), 403);
+
         return Inertia::render('companies/Form', [
             'company' => null,
         ]);
@@ -51,6 +55,9 @@ class CompanyController extends Controller
      */
     public function show(Company $company): Response
     {
+        $user = auth()->user();
+        abort_if(! $user->can(\App\Enums\Permissions::VIEW_COMPANIES->value) && $user->company_id !== $company->id, 403);
+
         $company->load('users.roles');
         $company->loadCount('orders');
 
@@ -64,6 +71,10 @@ class CompanyController extends Controller
      */
     public function edit(Company $company): Response
     {
+        $user = auth()->user();
+        // Mangers can edit their own company, or Admins with full EDIT permission
+        abort_if(! $user->can(\App\Enums\Permissions::EDIT_COMPANIES->value) && $user->company_id !== $company->id, 403);
+
         return Inertia::render('companies/Form', [
             'company' => new CompanyResource($company),
         ]);
@@ -84,6 +95,8 @@ class CompanyController extends Controller
      */
     public function destroy(Company $company): RedirectResponse
     {
+        abort_if(! auth()->user()->can(\App\Enums\Permissions::DELETE_COMPANIES->value), 403);
+
         if ($company->users()->exists() || $company->orders()->exists()) {
             return back()->withErrors([
                 'message' => 'Cannot delete company because it has associated users or orders. Please reassign or delete them first.',

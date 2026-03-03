@@ -17,8 +17,9 @@ class OrderResource extends JsonResource
         return [
             'id' => $this->id,
             'order_number' => $this->order_number,
-            'created_at' => $this->created_at, // Можна відформатувати тут ->format('d.m.Y H:i')
+            'created_at' => $this->created_at->format('M d, Y'),
             'total_price_cents' => $this->total_price_cents,
+            'currency' => $this->currency,
 
             // Detailed Pricing Breakdown
             'base_price_cents' => $this->base_price_cents,
@@ -62,8 +63,10 @@ class OrderResource extends JsonResource
                     fn ($st) => ['value' => $st->value, 'label' => $st->label()],
                     array_values(array_filter($this->status->allowedTransitions(), function ($st) {
                         $user = auth()->user();
-                        if ($user && $user->hasRole('manager') && ! $user->hasRole('admin')) {
-                            return $st->value === 'canceled' && in_array($this->status->value, ['new', 'pending'], true);
+                        if ($user && ! $user->can(\App\Enums\Permissions::UPDATE_ORDER_STATUS->value)) {
+                            return $st->value === 'canceled' && 
+                                   $user->can(\App\Enums\Permissions::CANCEL_ORDERS->value) &&
+                                   in_array($this->status->value, ['new', 'pending'], true);
                         }
 
                         return true;

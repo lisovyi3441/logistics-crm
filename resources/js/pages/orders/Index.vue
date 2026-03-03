@@ -22,10 +22,10 @@ const breadcrumbs = [
     { title: 'Orders', href: '/orders' },
 ];
 
-const formatMoney = (cents: number) => {
+const formatMoney = (cents: number, currency: string = 'UAH') => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'USD',
+        currency: currency,
     }).format(cents / 100);
 };
 
@@ -76,7 +76,7 @@ const formatMoney = (cents: number) => {
                                 <TableCell class="font-medium font-mono text-zinc-600 dark:text-zinc-300 text-center">
                                     {{ order.order_number }}
                                 </TableCell>
-                                <TableCell class="text-sm text-muted-foreground whitespace-nowrap text-center">
+                                <TableCell class="text-xs text-muted-foreground whitespace-nowrap text-center">
                                     {{ order.created_at }}
                                 </TableCell>
                                 <TableCell class="font-medium text-center">{{ order.company.name }}</TableCell>
@@ -95,7 +95,7 @@ const formatMoney = (cents: number) => {
                                     </Badge>
                                 </TableCell>
                                 <TableCell class="text-center font-mono font-medium">
-                                    {{ formatMoney(order.total_price_cents) }}
+                                    {{ formatMoney(order.total_price_cents, order.currency) }}
                                 </TableCell>
                             </TableRow>
                         </TableBody>

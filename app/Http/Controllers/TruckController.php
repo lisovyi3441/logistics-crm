@@ -14,6 +14,8 @@ class TruckController extends Controller
 {
     public function index()
     {
+        abort_if(! auth()->user()->can(\App\Enums\Permissions::VIEW_TRUCKS->value), 403);
+
         $trucks = Truck::with('vehicleType')
             ->withExists('activeOrders')
             ->paginate(10);
@@ -25,6 +27,8 @@ class TruckController extends Controller
 
     public function create()
     {
+        abort_if(! auth()->user()->can(\App\Enums\Permissions::CREATE_TRUCKS->value), 403);
+
         return Inertia::render('trucks/Form', [
             'vehicleTypes' => VehicleType::all(['id', 'name']),
         ]);
@@ -32,6 +36,8 @@ class TruckController extends Controller
 
     public function store(Request $request)
     {
+        abort_if(! auth()->user()->can(\App\Enums\Permissions::CREATE_TRUCKS->value), 403);
+
         $messages = [
             'license_plate.regex' => 'The license plate format is invalid. Use Ukrainian format (e.g., AA 1234 BB) using either Latin or Cyrillic characters.',
         ];
@@ -49,6 +55,8 @@ class TruckController extends Controller
 
     public function edit(Truck $truck)
     {
+        abort_if(! auth()->user()->can(\App\Enums\Permissions::EDIT_TRUCKS->value), 403);
+
         if ($truck->activeOrders()->exists()) {
             return redirect()->route('trucks.index')->with('error', 'Cannot edit a truck that is currently busy with an active order.');
         }
@@ -61,6 +69,8 @@ class TruckController extends Controller
 
     public function update(Request $request, Truck $truck)
     {
+        abort_if(! auth()->user()->can(\App\Enums\Permissions::EDIT_TRUCKS->value), 403);
+
         if ($truck->activeOrders()->exists()) {
             return redirect()->route('trucks.index')->with('error', 'Cannot update a truck that is currently busy with an active order.');
         }
@@ -79,6 +89,8 @@ class TruckController extends Controller
 
     public function destroy(Truck $truck)
     {
+        abort_if(! auth()->user()->can(\App\Enums\Permissions::DELETE_TRUCKS->value), 403);
+
         if ($truck->activeOrders()->exists()) {
             return redirect()->route('trucks.index')->with('error', 'Cannot delete a truck that is currently busy with an active order.');
         }

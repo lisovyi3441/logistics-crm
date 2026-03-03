@@ -21,16 +21,17 @@ import AppLogo from './AppLogo.vue';
 
 
 const page = usePage();
-const isAdmin = computed(() => {
-    const user = page.props.auth?.user as any;
-    return user?.roles?.includes('admin');
-});
+const user = computed(() => page.props.auth?.user as any);
+
+const can = (permission: string) => {
+    return user.value?.permissions?.includes(permission);
+};
 
 const mainNavItems = computed<NavItem[]>(() => {
-    const items = [
+    const items: NavItem[] = [
         {
             title: 'Dashboard',
-            href: dashboard(),
+            href: dashboard().url,
             icon: LayoutGrid,
         },
         {
@@ -40,22 +41,33 @@ const mainNavItems = computed<NavItem[]>(() => {
         },
     ];
 
-    if (isAdmin.value) {
+    if (can('view trucks')) {
         items.push({
             title: 'Fleet',
             href: '/trucks',
             icon: Truck,
         });
+    }
+
+    if (can('edit tariffs')) {
         items.push({
             title: 'Tariffs / Pricing',
             href: '/tariffs',
             icon: Settings,
         });
+    }
+
+    // "Companies" for Admin, "My Company" for Manager/Observer
+    if (can('view companies') || user.value?.company_id) {
+        const isGlobal = can('view companies');
         items.push({
-            title: 'Companies',
-            href: '/companies',
+            title: isGlobal ? 'Companies' : 'My Company',
+            href: isGlobal ? '/companies' : `/companies/${user.value.company_id}`,
             icon: Building,
         });
+    }
+
+    if (can('view users')) {
         items.push({
             title: 'Users',
             href: '/users',

@@ -10,7 +10,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OrderStatusHistory extends Model
 {
-    protected $guarded = [];
+    protected $fillable = [
+        'order_id',
+        'user_id',
+        'old_status',
+        'new_status',
+        'comment',
+    ];
 
     protected function casts(): array
     {

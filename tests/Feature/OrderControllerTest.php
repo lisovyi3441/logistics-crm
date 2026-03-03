@@ -9,9 +9,8 @@ use Spatie\Permission\Models\Role;
 use function Pest\Laravel\actingAs;
 
 beforeEach(function () {
-    Role::firstOrCreate(['name' => 'admin']);
-    Role::firstOrCreate(['name' => 'manager']);
-    Role::firstOrCreate(['name' => 'observer']);
+    // Scaffold all roles and permissions dynamically
+    $this->seed(\Database\Seeders\RoleSeeder::class);
 
     $this->admin = User::factory()->create();
     $this->admin->assignRole('admin');

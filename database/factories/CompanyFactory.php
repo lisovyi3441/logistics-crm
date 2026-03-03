@@ -25,7 +25,7 @@ class CompanyFactory extends Factory
             'vat_number' => fake()->bothify('UA########'),
             'address' => fake()->address(),
             'contact_phone' => '+380'.fake()->numberBetween(660000000, 999999999),
-            'contact_email' => fake()->unique()->safeEmail(),
+            'contact_email' => fake()->unique()->userName().'@gmail.com',
         ];
     }
 }

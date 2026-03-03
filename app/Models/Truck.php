@@ -14,7 +14,11 @@ class Truck extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'name',
+        'license_plate',
+        'vehicle_type_id',
+    ];
 
     public function vehicleType(): BelongsTo
     {

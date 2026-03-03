@@ -73,14 +73,24 @@ class DatabaseSeeder extends Seeder
         $companies = Company::factory(10)->create();
 
         foreach ($companies as $company) {
-            $users = User::factory(5)->create([
-                'company_id' => $company->id,
-            ]);
+            // One manager per company
+            $manager = User::factory()
+                ->state(['company_id' => $company->id])
+                ->manager()
+                ->create();
+
+            // Four observers
+            $observers = User::factory(4)
+                ->state(['company_id' => $company->id])
+                ->observer()
+                ->create();
+
+            $users = collect([$manager])->concat($observers);
 
             $orders = Order::factory(20)
-                ->recycle($users)
                 ->create([
                     'company_id' => $company->id,
+                    'user_id' => $manager->id,
                 ]);
 
             foreach ($orders as $order) {

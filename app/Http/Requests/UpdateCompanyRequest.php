@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\Permissions;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateCompanyRequest extends FormRequest
@@ -11,7 +12,13 @@ class UpdateCompanyRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->user() && auth()->user()->hasRole('admin');
+        $user = auth()->user();
+        $companyId = $this->route('company')->id ?? null;
+
+        return $user && (
+            $user->can(Permissions::EDIT_COMPANIES->value) ||
+            $user->company_id === (int) $companyId
+        );
     }
 
     /**

@@ -19,11 +19,11 @@ class DashboardService
     {
         $orderQuery = Order::query();
 
-        if ($user && ! $user->hasRole('admin')) {
+        if ($user && ! $user->can(\App\Enums\Permissions::VIEW_GLOBAL_DASHBOARD->value)) {
             $orderQuery->where('company_id', $user->company_id);
         }
 
-        $activeCompanies = ($user && ! $user->hasRole('admin')) ? 1 : Company::count();
+        $activeCompanies = ($user && ! $user->can(\App\Enums\Permissions::VIEW_GLOBAL_DASHBOARD->value)) ? 1 : Company::count();
 
         $totalRevenueCents = (clone $orderQuery)->where('status', '!=', 'canceled')->sum('total_price_cents');
 
@@ -41,7 +41,7 @@ class DashboardService
     {
         $query = Order::with('company')->latest();
 
-        if ($user && ! $user->hasRole('admin')) {
+        if ($user && ! $user->can(\App\Enums\Permissions::VIEW_GLOBAL_DASHBOARD->value)) {
             $query->where('company_id', $user->company_id);
         }
 
@@ -53,6 +53,7 @@ class DashboardService
             'status_label' => $order->status->label(),
             'status_color' => $order->status->color(),
             'total_price' => number_format((float) $order->total_price_cents / 100, 2, '.', ''),
+            'total_price_cents' => $order->total_price_cents,
             'currency' => $order->currency,
             'created_at' => $order->created_at->format('M d, Y'),
         ], $query->take($limit)->get()->all());

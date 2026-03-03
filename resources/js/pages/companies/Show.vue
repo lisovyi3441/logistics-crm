@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 defineProps<{
@@ -13,6 +14,13 @@ const deleteUser = (id: number) => {
 };
 
 const page = usePage();
+const hasPermission = (permission: string) => {
+    return (page.props.auth.user as any)?.permissions?.includes(permission);
+};
+
+const companiesBreadcrumbHref = computed(() => {
+    return hasPermission('view companies') ? '/companies' : '/dashboard';
+});
 </script>
 
 <template>
@@ -21,14 +29,14 @@ const page = usePage();
     <AppLayout
         :breadcrumbs="[
             { title: 'Dashboard', href: '/dashboard' },
-            { title: 'Companies', href: '/companies' },
+            { title: hasPermission('view companies') ? 'Companies' : 'My Company', href: companiesBreadcrumbHref },
             { title: company.data.name, href: `/companies/${company.data.id}` },
         ]"
     >
         <div class="flex h-full flex-1 flex-col gap-6 rounded-xl p-4 max-w-5xl mx-auto w-full">
             <div class="flex items-center justify-between">
                 <h1 class="text-2xl font-bold dark:text-white">{{ company.data.name }}</h1>
-                <Link :href="`/companies/${company.data.id}/edit`" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-zinc-200 bg-white hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 h-9 px-4 py-2 shadow-sm">
+                <Link v-if="hasPermission('edit companies') || (page.props.auth.user as any)?.company_id === company.data.id" :href="`/companies/${company.data.id}/edit`" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-zinc-200 bg-white hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 h-9 px-4 py-2 shadow-sm">
                     Edit Company
                 </Link>
             </div>
@@ -64,7 +72,7 @@ const page = usePage();
             <div class="rounded-xl border border-sidebar-border bg-white shadow-sm dark:bg-zinc-900 dark:border-zinc-800 overflow-hidden">
                 <div class="p-6 border-b border-sidebar-border dark:border-zinc-800 flex justify-between items-center">
                     <h2 class="text-lg font-semibold dark:text-white">Associated Users</h2>
-                    <Link :href="`/users/create?company_id=${company.data.id}&redirect_to=/companies/${company.data.id}`" class="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
+                    <Link v-if="hasPermission('create users')" :href="`/users/create?company_id=${company.data.id}&redirect_to=/companies/${company.data.id}`" class="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
                         + Add User
                     </Link>
                 </div>
@@ -75,7 +83,7 @@ const page = usePage();
                                 <th scope="col" class="px-6 py-3">Name</th>
                                 <th scope="col" class="px-6 py-3">Email</th>
                                 <th scope="col" class="px-6 py-3">Roles</th>
-                                <th scope="col" class="px-6 py-3 text-right">Actions</th>
+                                <th v-if="hasPermission('edit users') || hasPermission('delete users')" scope="col" class="px-6 py-3 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -87,9 +95,9 @@ const page = usePage();
                                         {{ role }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-right space-x-2">
-                                    <Link :href="`/users/${user.id}/edit?redirect_to=/companies/${company.data.id}`" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</Link>
-                                    <button @click="deleteUser(user.id)" class="font-medium text-red-600 dark:text-red-500 hover:underline">Remove</button>
+                                <td v-if="hasPermission('edit users') || hasPermission('delete users')" class="px-6 py-4 text-right space-x-2">
+                                    <Link v-if="hasPermission('edit users')" :href="`/users/${user.id}/edit?redirect_to=/companies/${company.data.id}`" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</Link>
+                                    <button v-if="hasPermission('delete users')" @click="deleteUser(user.id)" class="font-medium text-red-600 dark:text-red-500 hover:underline">Remove</button>
                                 </td>
                             </tr>
                             <tr v-if="!company.data.users || company.data.users.length === 0">

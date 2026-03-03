@@ -26,7 +26,7 @@ const breadcrumbs = computed(() => [
 const formatMoney = (cents: number) => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'USD',
+        currency: orderData.value.currency || 'UAH',
     }).format(cents / 100);
 };
 

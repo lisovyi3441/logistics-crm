@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\Permissions;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreCompanyRequest extends FormRequest
@@ -11,7 +12,7 @@ class StoreCompanyRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->user() && auth()->user()->hasRole('admin');
+        return auth()->user() && auth()->user()->can(Permissions::CREATE_COMPANIES->value);
     }
 
     /**

@@ -6,5 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Tariff extends Model
 {
-    protected $guarded = [];
+    protected $fillable = [
+        'price_per_km_cents',
+        'insurance_rate_percent',
+        'tax_rate_percent',
+        'adr_surcharge_percent',
+    ];
 }

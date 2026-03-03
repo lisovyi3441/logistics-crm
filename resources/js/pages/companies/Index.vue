@@ -21,6 +21,9 @@ const deleteCompany = (id: number) => {
 };
 
 const page = usePage();
+const hasPermission = (permission: string) => {
+    return (page.props.auth.user as any)?.permissions?.includes(permission);
+};
 </script>
 
 <template>
@@ -35,7 +38,7 @@ const page = usePage();
         <div class="flex flex-col gap-4 p-4 flex-1 min-h-0">
             <div class="flex-none flex items-center justify-between">
                 <h1 class="text-2xl font-bold dark:text-white">Companies</h1>
-                <Link href="/companies/create" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-indigo-600 text-white shadow hover:bg-indigo-700 h-9 px-4 py-2">
+                <Link v-if="hasPermission('create companies')" href="/companies/create" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-indigo-600 text-white shadow hover:bg-indigo-700 h-9 px-4 py-2">
                     Create Company
                 </Link>
             </div>
@@ -83,7 +86,7 @@ const page = usePage();
                             <TableCell class="text-center">{{ company.orders_count }}</TableCell>
                             <TableCell class="text-center space-x-3 whitespace-nowrap">
                                 <Link :href="`/companies/${company.id}/edit`" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Edit</Link>
-                                <button @click="deleteCompany(company.id)" class="font-medium text-red-600 dark:text-red-500 hover:underline">Delete</button>
+                                <button v-if="hasPermission('delete companies')" @click="deleteCompany(company.id)" class="font-medium text-red-600 dark:text-red-500 hover:underline">Delete</button>
                             </TableCell>
                         </TableRow>
                     </TableBody>

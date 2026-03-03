@@ -63,7 +63,7 @@ class StoreOrderRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
 
-        if (auth()->user()->hasRole('admin')) {
+        if (auth()->user()->can(\App\Enums\Permissions::VIEW_COMPANIES->value)) {
             $rules['company_id'] = ['required', 'exists:companies,id'];
         }
 

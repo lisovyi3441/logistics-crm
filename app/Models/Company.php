@@ -12,7 +12,13 @@ class Company extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'name',
+        'vat_number',
+        'address',
+        'contact_phone',
+        'contact_email',
+    ];
 
     public function users(): HasMany
     {

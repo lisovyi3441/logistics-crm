@@ -7,7 +7,10 @@ namespace App\Http\Controllers;
 use App\Actions\Orders\AssignTruckAction;
 use App\Actions\Orders\ChangeOrderStatusAction;
 use App\Actions\Orders\CreateOrderAction;
+use App\Enums\Permissions;
+use App\Http\Requests\AssignTruckRequest;
 use App\Http\Requests\StoreOrderRequest;
+use App\Http\Requests\UpdateOrderStatusRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Company;
 use App\Models\Order;
@@ -30,7 +33,7 @@ class OrderController extends Controller
         // RBAC Scoping:
         // Admin: all orders
         // Manager & Observer: all orders in their company
-        if ($user && ! $user->hasRole('admin')) {
+        if ($user && ! $user->can(Permissions::VIEW_ALL_ORDERS->value)) {
             $query->where('company_id', $user->company_id);
         }
 
@@ -48,7 +51,7 @@ class OrderController extends Controller
         $user = auth()->user();
         $companies = [];
 
-        if ($user->hasRole('admin')) {
+        if ($user->can(Permissions::VIEW_COMPANIES->value)) {
             $companies = Company::select('id', 'name')->get();
         }
 
@@ -57,7 +60,7 @@ class OrderController extends Controller
         return Inertia::render('orders/Form', [
             'companies' => $companies,
             'vehicleTypes' => $vehicleTypes,
-            'is_admin' => $user->hasRole('admin'),
+            'is_admin' => $user->can(Permissions::VIEW_ALL_ORDERS->value),
             'default_company_id' => $user->company_id,
         ]);
     }
@@ -68,7 +71,7 @@ class OrderController extends Controller
         $user = auth()->user();
         $validated = $request->validated();
 
-        $companyId = $user->hasRole('admin') ? $validated['company_id'] : $user->company_id;
+        $companyId = $user->can(Permissions::VIEW_COMPANIES->value) ? $validated['company_id'] : $user->company_id;
 
         $action->execute($user, $validated, $companyId);
 
@@ -83,36 +86,31 @@ class OrderController extends Controller
         $order->load(['company', 'user', 'items', 'statusHistories.user', 'truck', 'vehicleType']);
 
         $trucks = [];
-        if ($user->hasRole('admin')) {
+        if ($user->can(Permissions::ASSIGN_TRUCKS->value)) {
             $trucks = Truck::get(['id', 'name']);
         }
 
         return Inertia::render('orders/Show', [
             'order' => new OrderResource($order),
             'trucks' => $trucks,
-            'is_admin' => $user->hasRole('admin'),
+            'is_admin' => $user->can(Permissions::VIEW_ALL_ORDERS->value),
         ]);
     }
 
-    public function updateStatus(Request $request, Order $order, ChangeOrderStatusAction $action): RedirectResponse
+    public function updateStatus(UpdateOrderStatusRequest $request, Order $order, ChangeOrderStatusAction $action): RedirectResponse
     {
         $this->authorize('updateStatus', $order);
-        $validated = $request->validate([
-            'status' => ['required', 'string'],
-        ]);
+        $validated = $request->validated();
 
         $action->execute($order, $validated['status']);
 
         return back();
     }
 
-    public function assignTruck(Request $request, Order $order, AssignTruckAction $action): RedirectResponse
+    public function assignTruck(AssignTruckRequest $request, Order $order, AssignTruckAction $action): RedirectResponse
     {
-        $this->authorize('updateStatus', $order);
-
-        $validated = $request->validate([
-            'truck_id' => ['required', 'integer'],
-        ]);
+        $this->authorize('assignTruck', $order);
+        $validated = $request->validated();
 
         $action->execute($order, (int) $validated['truck_id']);
 

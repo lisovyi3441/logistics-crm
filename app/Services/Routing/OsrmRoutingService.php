@@ -9,8 +9,6 @@ use Illuminate\Support\Facades\Log;
 
 class OsrmRoutingService implements RoutingServiceInterface
 {
-    private const BASE_URL = 'http://router.project-osrm.org/route/v1/driving';
-
     /**
      * Get route details between two coordinates using OSRM.
      *
@@ -29,8 +27,9 @@ class OsrmRoutingService implements RoutingServiceInterface
         return \Illuminate\Support\Facades\Cache::remember($cacheKey, now()->addDay(), function () use ($originLat, $originLng, $destinationLat, $destinationLng) {
             // OSRM expects coordinates in lng,lat format
             $coordinates = "{$originLng},{$originLat};{$destinationLng},{$destinationLat}";
+            $baseUrl = config('services.osrm.url', 'http://router.project-osrm.org/route/v1/driving');
 
-            $url = sprintf('%s/%s?overview=full&geometries=geojson', self::BASE_URL, $coordinates);
+            $url = sprintf('%s/%s?overview=full&geometries=geojson', $baseUrl, $coordinates);
 
             try {
                 $response = Http::timeout(5)->get($url);

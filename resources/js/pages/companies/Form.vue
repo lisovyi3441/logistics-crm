@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, useForm, Link } from '@inertiajs/vue3';
+import { Head, useForm, Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{
@@ -14,6 +15,18 @@ const form = useForm({
     address: props.company?.data?.address || '',
     contact_phone: props.company?.data?.contact_phone || '',
     contact_email: props.company?.data?.contact_email || '',
+});
+
+const page = usePage();
+const hasPermission = (permission: string) => {
+    return (page.props.auth.user as any)?.permissions?.includes(permission);
+};
+
+const cancelHref = computed(() => {
+    if (hasPermission('view companies')) {
+        return '/companies';
+    }
+    return '/dashboard';
 });
 
 const submit = () => {
@@ -31,7 +44,7 @@ const submit = () => {
     <AppLayout
         :breadcrumbs="[
             { title: 'Dashboard', href: '/dashboard' },
-            { title: 'Companies', href: '/companies' },
+            { title: hasPermission('view companies') ? 'Companies' : 'My Company', href: cancelHref },
             { title: isEditing ? 'Edit' : 'Create', href: '#' },
         ]"
     >
@@ -72,7 +85,7 @@ const submit = () => {
                     </div>
 
                     <div class="flex items-center justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-                        <Link href="/companies" class="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-300 rounded-md shadow-sm hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 dark:hover:bg-zinc-700">
+                        <Link :href="cancelHref" class="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-300 rounded-md shadow-sm hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 dark:hover:bg-zinc-700">
                             Cancel
                         </Link>
                         <button type="submit" :disabled="form.processing" class="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">

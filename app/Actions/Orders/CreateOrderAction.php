@@ -71,7 +71,7 @@ class CreateOrderAction
                 'discount_cents' => (int) $pipelineResult->discountCents,
                 'tax_cents' => (int) $pipelineResult->taxCents,
 
-                'currency' => 'USD',
+                'currency' => 'UAH',
                 'notes' => $validatedData['notes'] ?? null,
 
                 // Geospatial / Routing Data

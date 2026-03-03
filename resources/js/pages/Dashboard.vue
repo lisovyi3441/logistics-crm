@@ -41,6 +41,12 @@ defineProps<{
 }>();
 
 
+const formatMoney = (cents: number, currency: string = 'UAH') => {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency,
+    }).format(cents / 100);
+};
 </script>
 
 <template>
@@ -96,7 +102,9 @@ defineProps<{
                                         {{ order.status_label }}
                                     </Badge>
                                 </TableCell>
-                                <TableCell class="text-center font-mono font-medium">${{ order.total_price }}</TableCell>
+                                <TableCell class="text-center font-mono font-medium">
+                                    {{ formatMoney(order.total_price_cents, order.currency) }}
+                                </TableCell>
                                 <TableCell class="text-xs text-muted-foreground text-center">{{ order.created_at }}</TableCell>
                             </TableRow>
                         </TableBody>

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Concerns\ProfileValidationRules;
+use App\Enums\Permissions;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
@@ -13,7 +14,7 @@ class UpdateUserRequest extends FormRequest
 
     public function authorize(): bool
     {
-        return auth()->user() && auth()->user()->hasRole('admin');
+        return auth()->user() && auth()->user()->can(Permissions::EDIT_USERS->value);
     }
 
     public function rules(): array

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\Permissions;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Password;
 
@@ -12,7 +13,7 @@ class StoreUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->user() && auth()->user()->hasRole('admin');
+        return auth()->user() && auth()->user()->can(Permissions::CREATE_USERS->value);
     }
 
     /**

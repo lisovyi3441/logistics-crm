@@ -13,7 +13,14 @@ class TariffController extends Controller
 {
     public function edit()
     {
-        $tariff = Tariff::first() ?? new Tariff;
+        abort_if(! auth()->user()->can(\App\Enums\Permissions::EDIT_TARIFFS->value), 403);
+
+        $tariff = Tariff::firstOrCreate([], [
+            'price_per_km_cents' => 100,
+            'insurance_rate_percent' => 1.0,
+            'tax_rate_percent' => 20.0,
+            'adr_surcharge_percent' => 25.0,
+        ]);
 
         return Inertia::render('tariffs/Edit', [
             'tariff' => $tariff,
@@ -23,6 +30,8 @@ class TariffController extends Controller
 
     public function update(Request $request)
     {
+        abort_if(! auth()->user()->can(\App\Enums\Permissions::EDIT_TARIFFS->value), 403);
+
         $validated = $request->validate([
             'insurance_rate_percent' => 'required|numeric|min:0|max:100',
             'tax_rate_percent' => 'required|numeric|min:0|max:100',

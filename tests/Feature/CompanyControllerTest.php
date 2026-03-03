@@ -7,10 +7,7 @@ use Spatie\Permission\Models\Role;
 use function Pest\Laravel\actingAs;
 
 beforeEach(function () {
-    // Ensure roles exist
-    Role::firstOrCreate(['name' => 'admin']);
-    Role::firstOrCreate(['name' => 'manager']);
-    Role::firstOrCreate(['name' => 'observer']);
+    $this->seed(\Database\Seeders\RoleSeeder::class);
 
     $this->admin = User::factory()->create();
     $this->admin->assignRole('admin');
@@ -76,4 +73,40 @@ it('allows deleting a company without related records', function () {
         ->assertRedirect(route('companies.index'));
 
     $this->assertDatabaseMissing('companies', ['id' => $company->id]);
+});
+
+it('allows manager to edit their own company', function () {
+    $company = Company::factory()->create();
+    $this->manager->update(['company_id' => $company->id]);
+
+    actingAs($this->manager)
+        ->put("/companies/{$company->id}", [
+            'name' => 'My Updated Company',
+            'address' => 'Kyiv',
+        ])
+        ->assertRedirect(route('companies.index'));
+
+    $this->assertDatabaseHas('companies', [
+        'id' => $company->id,
+        'name' => 'My Updated Company',
+    ]);
+});
+
+it('forbids manager from editing another company', function () {
+    $myCompany = Company::factory()->create();
+    $this->manager->update(['company_id' => $myCompany->id]);
+
+    $otherCompany = Company::factory()->create(['name' => 'Other Company']);
+
+    actingAs($this->manager)
+        ->put("/companies/{$otherCompany->id}", [
+            'name' => 'Hacked Company',
+            'address' => 'Kyiv',
+        ])
+        ->assertForbidden();
+
+    $this->assertDatabaseHas('companies', [
+        'id' => $otherCompany->id,
+        'name' => 'Other Company',
+    ]);
 });
