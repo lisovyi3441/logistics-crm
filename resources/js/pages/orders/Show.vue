@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import L from 'leaflet';
-import { MapPin } from 'lucide-vue-next';
+import { MapPin, FileText, Download, Loader2, ExternalLink } from 'lucide-vue-next';
 import { ref, computed, onMounted } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -71,6 +71,17 @@ const assignTruck = (event: Event) => {
             alert(err.truck_id || 'Failed to assign truck.');
             select.value = currentTruckId || '';
         }
+    });
+};
+
+const generatingDoc = ref<string | null>(null);
+
+const generateDocument = (type: 'cmr' | 'invoice') => {
+    generatingDoc.value = type;
+    router.post(`/orders/${orderData.value.order_number}/documents/${type}/generate`, {}, {
+        preserveScroll: true,
+        onFinish: () => generatingDoc.value = null,
+        onSuccess: () => alert('Document generation started. It will appear here shortly.'),
     });
 };
 
@@ -271,6 +282,57 @@ onMounted(() => {
                     </div>
                 </div>
 
+            </div>
+
+            <!-- Documents Section -->
+            <div class="overflow-hidden rounded-xl border border-sidebar-border/70 bg-white shadow-sm dark:border-sidebar-border dark:bg-zinc-900">
+                <div class="border-b border-sidebar-border/70 bg-zinc-50 px-6 py-4 flex justify-between items-center dark:border-sidebar-border dark:bg-zinc-800/50">
+                    <h3 class="font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+                        <FileText class="w-5 h-5 text-indigo-500" />
+                        Documents
+                    </h3>
+                    <div class="flex gap-2">
+                        <button v-if="orderData.can?.generateCmr" @click="generateDocument('cmr')" :disabled="generatingDoc === 'cmr'" class="inline-flex items-center gap-1.5 rounded-md bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-600 shadow-sm hover:bg-indigo-100 disabled:opacity-50 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50">
+                            <Loader2 v-if="generatingDoc === 'cmr'" class="w-3.5 h-3.5 animate-spin" />
+                            Generate CMR
+                        </button>
+                        <button v-if="orderData.can?.generateInvoice" @click="generateDocument('invoice')" :disabled="generatingDoc === 'invoice'" class="inline-flex items-center gap-1.5 rounded-md bg-zinc-100 px-2.5 py-1.5 text-xs font-semibold text-zinc-700 shadow-sm hover:bg-zinc-200 disabled:opacity-50 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700">
+                            <Loader2 v-if="generatingDoc === 'invoice'" class="w-3.5 h-3.5 animate-spin" />
+                            Generate Invoice
+                        </button>
+                    </div>
+                </div>
+                <div class="p-0">
+                    <ul v-if="orderData.documents && orderData.documents.length > 0" class="divide-y divide-sidebar-border/70 dark:divide-sidebar-border">
+                        <li v-for="doc in orderData.documents" :key="doc.id" class="flex items-center justify-between px-6 py-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                            <div class="flex items-center gap-3">
+                                <FileText class="w-5 h-5 text-zinc-400" />
+                                <div>
+                                    <p class="text-sm font-medium text-zinc-900 dark:text-white uppercase">{{ doc.type }}</p>
+                                    <p class="text-xs text-zinc-500">Generated {{ doc.created_at }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <a :href="doc.url_view" target="_blank" v-if="doc.url_view" class="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-300">
+                                    <ExternalLink class="w-4 h-4" />
+                                    Open
+                                </a>
+                                <a :href="doc.url_download" target="_blank" v-if="doc.url_download" class="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
+                                    <Download class="w-4 h-4" />
+                                    Download
+                                </a>
+                                <span v-else-if="!doc.url_view" class="text-xs text-amber-600 border border-amber-200 bg-amber-50 px-2 py-1 rounded dark:bg-amber-900/20 dark:border-amber-900/50">
+                                    Processing...
+                                </span>
+                            </div>
+                        </li>
+                    </ul>
+                    <div v-else class="px-6 py-8 text-center">
+                        <FileText class="mx-auto h-8 w-8 text-zinc-300 dark:text-zinc-600" />
+                        <h3 class="mt-2 text-sm font-semibold text-zinc-900 dark:text-white">No documents</h3>
+                        <p class="mt-1 text-sm text-zinc-500">Documents will appear here once generated.</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Interactive Map Section -->

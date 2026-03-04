@@ -64,7 +64,7 @@ class OrderResource extends JsonResource
                     array_values(array_filter($this->status->allowedTransitions(), function ($st) {
                         $user = auth()->user();
                         if ($user && ! $user->can(\App\Enums\Permissions::UPDATE_ORDER_STATUS->value)) {
-                            return $st->value === 'canceled' && 
+                            return $st->value === 'canceled' &&
                                    $user->can(\App\Enums\Permissions::CANCEL_ORDERS->value) &&
                                    in_array($this->status->value, ['new', 'pending'], true);
                         }
@@ -76,6 +76,8 @@ class OrderResource extends JsonResource
 
             'can' => [
                 'updateStatus' => $request->user()?->can('updateStatus', $this->resource) ?? false,
+                'generateCmr' => $request->user()?->can('generateCmr', $this->resource) ?? false,
+                'generateInvoice' => $request->user()?->can('generateInvoice', $this->resource) ?? false,
             ],
 
             'items' => $this->whenLoaded('items', function () {
@@ -104,6 +106,16 @@ class OrderResource extends JsonResource
                     'user' => [
                         'name' => $history->user->name ?? 'System',
                     ],
+                ]);
+            }),
+
+            'documents' => $this->whenLoaded('documents', function () {
+                return $this->documents->map(fn ($doc) => [
+                    'id' => $doc->id,
+                    'type' => $doc->document_type,
+                    'created_at' => $doc->created_at->format('M d, Y H:i'),
+                    'url_download' => route('orders.documents.download', ['order' => $this->order_number, 'document' => $doc->id, 'action' => 'download']),
+                    'url_view' => route('orders.documents.download', ['order' => $this->order_number, 'document' => $doc->id, 'action' => 'view']),
                 ]);
             }),
         ];

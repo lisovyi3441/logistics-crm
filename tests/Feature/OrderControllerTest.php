@@ -4,7 +4,6 @@ use App\Models\Company;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
-use Spatie\Permission\Models\Role;
 
 use function Pest\Laravel\actingAs;
 

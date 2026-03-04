@@ -62,7 +62,7 @@ it('fails to cancel an order if it is already in_transit (for manager)', functio
         ]);
 
     $response->assertSessionHasErrors('status');
-    
+
     // Status should remain IN_TRANSIT
     $this->assertDatabaseHas('orders', [
         'id' => $this->order->id,
@@ -95,7 +95,7 @@ it('fails for admin if transition is invalid in the model', function () {
         ]);
 
     $response->assertSessionHasErrors('status');
-    
+
     $this->assertDatabaseHas('orders', [
         'id' => $this->order->id,
         'status' => OrderStatus::DELIVERED->value,

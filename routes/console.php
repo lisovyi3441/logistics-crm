@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('migrate:fresh --seed --force')->hourly();
+Schedule::command('telescope:prune --hours=24')->daily();

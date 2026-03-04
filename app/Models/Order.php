@@ -77,6 +77,11 @@ class Order extends Model
         return $this->hasMany(OrderStatusHistory::class);
     }
 
+    public function documents(): HasMany
+    {
+        return $this->hasMany(OrderDocument::class);
+    }
+
     /**
      * Get the route key for the model.
      */

@@ -10,20 +10,23 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
+        "barryvdh/laravel-dompdf": "^3.1",
+        "fakerphp/faker": "^1.23",
         "inertiajs/inertia-laravel": "^2.0",
         "laravel/fortify": "^1.30",
         "laravel/framework": "^12.0",
         "laravel/octane": "^2.14",
         "laravel/tinker": "^2.10.1",
         "laravel/wayfinder": "^0.1.9",
-        "spatie/laravel-permission": "^7.2",
-        "fakerphp/faker": "^1.23"
+        "league/flysystem-aws-s3-v3": "^3.32",
+        "spatie/laravel-permission": "^7.2"
     },
     "require-dev": {
         "laravel/boost": "^2.1",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.24",
         "laravel/sail": "^1.41",
+        "laravel/telescope": "^5.18",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
         "pestphp/pest": "^4.4",

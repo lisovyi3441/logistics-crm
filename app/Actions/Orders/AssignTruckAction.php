@@ -33,7 +33,7 @@ class AssignTruckAction
             ]);
         }
 
-        DB::transaction(function () use ($order, $truck, $truckId) {
+        DB::transaction(function () use ($order, $truck) {
             $oldPrice = $order->total_price_cents;
             $order->update([
                 'truck_id' => $truck->id,

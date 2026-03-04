@@ -17,7 +17,6 @@ use App\Models\Order;
 use App\Models\Truck;
 use App\Models\VehicleType;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -83,7 +82,7 @@ class OrderController extends Controller
         $this->authorize('view', $order);
         $user = auth()->user();
 
-        $order->load(['company', 'user', 'items', 'statusHistories.user', 'truck', 'vehicleType']);
+        $order->load(['company', 'user', 'items', 'statusHistories.user', 'truck', 'vehicleType', 'documents']);
 
         $trucks = [];
         if ($user->can(Permissions::ASSIGN_TRUCKS->value)) {

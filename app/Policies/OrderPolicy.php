@@ -15,7 +15,7 @@ class OrderPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can(Permissions::VIEW_ALL_ORDERS->value) || 
+        return $user->can(Permissions::VIEW_ALL_ORDERS->value) ||
                $user->can(Permissions::VIEW_COMPANY_ORDERS->value);
     }
 
@@ -25,7 +25,7 @@ class OrderPolicy
     public function view(User $user, Order $order): bool
     {
         // Admins can view any (handled by Gate::before)
-        return $user->company_id === $order->company_id && 
+        return $user->company_id === $order->company_id &&
                $user->can(Permissions::VIEW_COMPANY_ORDERS->value);
     }
 
@@ -42,7 +42,7 @@ class OrderPolicy
      */
     public function update(User $user, Order $order): bool
     {
-        return $user->can(Permissions::EDIT_ORDERS->value) && 
+        return $user->can(Permissions::EDIT_ORDERS->value) &&
                $user->company_id === $order->company_id;
     }
 
@@ -51,7 +51,7 @@ class OrderPolicy
      */
     public function updateStatus(User $user, Order $order): bool
     {
-        return $user->can(Permissions::UPDATE_ORDER_STATUS->value) || 
+        return $user->can(Permissions::UPDATE_ORDER_STATUS->value) ||
                ($user->can(Permissions::CANCEL_ORDERS->value) && $user->company_id === $order->company_id);
     }
 
@@ -69,5 +69,22 @@ class OrderPolicy
     public function delete(User $user, Order $order): bool
     {
         return $user->can(Permissions::DELETE_ORDERS->value);
+    }
+
+    /**
+     * Custom ability to generate CMR.
+     */
+    public function generateCmr(User $user, Order $order): bool
+    {
+        return $user->can(Permissions::VIEW_ALL_ORDERS->value);
+    }
+
+    /**
+     * Custom ability to generate Invoice.
+     */
+    public function generateInvoice(User $user, Order $order): bool
+    {
+        return $user->can(Permissions::VIEW_ALL_ORDERS->value) ||
+               ($user->can(Permissions::VIEW_COMPANY_ORDERS->value) && $user->company_id === $order->company_id);
     }
 }

@@ -17,7 +17,7 @@ enum Permissions: string
     // === 2. Order Processing & Fleet (Обробка та Автопарк) ===
     case ASSIGN_TRUCKS = 'assign trucks'; // Тільки Адмін
     case UPDATE_ORDER_STATUS = 'update order status'; // Тільки Адмін - ручна зміна статусу
-    
+
     // === 3. Physical Fleet (Фізичний Автопарк - Trucks) ===
     case VIEW_TRUCKS = 'view trucks';
     case CREATE_TRUCKS = 'create trucks';

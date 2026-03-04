@@ -124,7 +124,7 @@ it('calculates price dynamically if order had no vehicle type', function () {
         'vehicle_type_id' => null,
         'distance_km' => 50,
     ]);
-    
+
     // Create an item to give it some weight/price base
     $orderNoType->items()->create([
         'name' => 'Box',
@@ -142,12 +142,12 @@ it('calculates price dynamically if order had no vehicle type', function () {
         ]);
 
     $response->assertSessionHasNoErrors();
-    
+
     $orderNoType->refresh();
-    
-    // We don't check the exact math here (PricingPipeline test does that), 
+
+    // We don't check the exact math here (PricingPipeline test does that),
     // but the price should have changed because it picked up the new truck's vehicle_type_id rate.
-    
+
     $this->assertDatabaseHas('orders', [
         'id' => $orderNoType->id,
         'truck_id' => $this->truck->id,

@@ -22,24 +22,24 @@ jobs:
             cd ${{ secrets.DO_PROJECT_PATH }}
             git fetch origin main
             git reset --hard origin/main
-            
+
             # Build and start the production container
             docker compose -f docker-compose.prod.yml up -d --build
-            
+
             # Wait a few seconds for the container to initialize
             sleep 5
-            
-            # Migrate database
-            docker compose -f docker-compose.prod.yml exec -T app php artisan migrate --force
-            
+
+            # Validate and refresh database with dummy data
+            docker compose -f docker-compose.prod.yml exec -T app php artisan migrate:fresh --seed --force
+
             # Clear caches
             docker compose -f docker-compose.prod.yml exec -T app php artisan config:cache
             docker compose -f docker-compose.prod.yml exec -T app php artisan route:cache
             docker compose -f docker-compose.prod.yml exec -T app php artisan view:cache
-            
+
             # Restart the container to reload Octane workers safely
             docker compose -f docker-compose.prod.yml restart app
-            
+
             # Setup Cron for Laravel Scheduler (recreates to ensure updated path)
             crontab -l 2>/dev/null | grep -v "schedule:run" | crontab -
             (crontab -l 2>/dev/null; echo "* * * * * cd ${{ secrets.DO_PROJECT_PATH }} && PATH=\$$PATH:/usr/bin:/usr/local/bin:/snap/bin docker compose -f docker-compose.prod.yml exec -T app php artisan schedule:run >> /dev/null 2>&1") | crontab -

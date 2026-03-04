@@ -18,8 +18,8 @@ class TruckFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->company . ' Truck',
-            'license_plate' => strtoupper($this->faker->lexify('??')) . ' ' . $this->faker->numerify('####') . ' ' . strtoupper($this->faker->lexify('??')),
+            'name' => $this->faker->company.' Truck',
+            'license_plate' => strtoupper($this->faker->lexify('??')).' '.$this->faker->numerify('####').' '.strtoupper($this->faker->lexify('??')),
             'vehicle_type_id' => VehicleType::factory(),
         ];
     }
