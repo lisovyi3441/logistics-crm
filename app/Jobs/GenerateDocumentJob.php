@@ -34,7 +34,11 @@ class GenerateDocumentJob implements ShouldQueue
             'order' => $this->order->load(['company', 'items'])
         ]);
 
-        Storage::disk('s3')->put($path, $pdf->output());
+        $uploaded = Storage::disk('s3')->put($path, $pdf->output());
+
+    if (! $uploaded) {
+        throw new \RuntimeException("Failed to upload generated document to S3 bucket. Path: {$path}");
+    }
 
         OrderDocument::updateOrCreate(
             ['order_id' => $this->order->id, 'document_type' => $this->type],

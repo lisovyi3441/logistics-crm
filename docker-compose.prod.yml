@@ -71,8 +71,7 @@ services:
       AWS_BUCKET: "${AWS_BUCKET:-local}"
     entrypoint: >
       /bin/sh -c "
-      sleep 5;
-      /usr/bin/mc alias set myminio http://minio:9000 \${AWS_ACCESS_KEY_ID} \${AWS_SECRET_ACCESS_KEY};
+      until (/usr/bin/mc alias set myminio http://minio:9000 \${AWS_ACCESS_KEY_ID} \${AWS_SECRET_ACCESS_KEY}); do echo 'Waiting for MinIO...'; sleep 3; done;
       /usr/bin/mc mb myminio/\${AWS_BUCKET} --ignore-existing;
       /usr/bin/mc anonymous set public myminio/\${AWS_BUCKET};
       exit 0;
