@@ -24,7 +24,7 @@ it('allows admin to update user role without changing email', function () {
 
     $response = actingAs($this->admin)
         ->put("/users/{$user->id}", [
-            'name' => $user->name,
+            'name' => 'Valid Name',
             'email' => 'existing@google.com',
             'role' => 'manager',
             'company_id' => $company->id,
