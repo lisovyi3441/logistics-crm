@@ -4,27 +4,39 @@ FROM php:8.5-cli AS frontend
 RUN apt-get update && apt-get install -y \
     curl \
     git \
+    unzip \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
 WORKDIR /app
+
+# Cache backend dependencies
+COPY composer.json composer.lock ./
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN composer install --no-dev --no-scripts --no-autoloader --no-interaction
+
+# Cache frontend dependencies
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Copy the rest of the code
 COPY . .
 
-# Install PHP dependencies first (Wayfinder plugin needs them)
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Finish backend setup
+RUN composer dump-autoload --optimize --no-dev
 
-
-
-# Install NPM dependencies and build
-RUN npm ci
+# Build frontend
 ENV VITE_SKIP_WAYFINDER=true
 RUN npm run build
 
 # Stage 2: Production Server (FrankenPHP)
 FROM dunglas/frankenphp:php8.4
+
+# Install unzip to speed up composer downloads
+RUN apt-get update && \
+    apt-get install -y unzip && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install required PHP extensions using the provided helper script
 # PCNTL is required for Laravel Octane
@@ -38,9 +50,12 @@ RUN install-php-extensions \
     opcache
 
 # Ensure Composer is available
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
 WORKDIR /app
+
+# Cache production backend dependencies
+COPY composer.json composer.lock ./
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN composer install --no-dev --no-scripts --no-autoloader --no-interaction
 
 # Copy application files
 COPY . .
@@ -48,8 +63,8 @@ COPY . .
 # Copy compiled frontend assets from Stage 1
 COPY --from=frontend /app/public/build ./public/build
 
-# Install PHP production dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Finish backend setup (autoload & scripts)
+RUN composer dump-autoload --optimize --no-dev
 
 # Set up Laravel permissions (FrankenPHP runs as root by default, or specific standard users)
 RUN chmod -R 775 storage bootstrap/cache
