@@ -40,5 +40,6 @@ jobs:
             # Restart the container to reload Octane workers safely
             docker compose -f docker-compose.prod.yml restart app
             
-            # Setup Cron for Laravel Scheduler
-            (crontab -l 2>/dev/null | grep -q "schedule:run") || (crontab -l 2>/dev/null; echo "* * * * * cd ${{ secrets.DO_PROJECT_PATH }} && docker compose -f docker-compose.prod.yml exec -T app php artisan schedule:run >> /dev/null 2>&1") | crontab -
+            # Setup Cron for Laravel Scheduler (recreates to ensure updated path)
+            crontab -l 2>/dev/null | grep -v "schedule:run" | crontab -
+            (crontab -l 2>/dev/null; echo "* * * * * cd ${{ secrets.DO_PROJECT_PATH }} && PATH=\$$PATH:/usr/bin:/usr/local/bin:/snap/bin docker compose -f docker-compose.prod.yml exec -T app php artisan schedule:run >> /dev/null 2>&1") | crontab -
