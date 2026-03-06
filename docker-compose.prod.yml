@@ -18,7 +18,7 @@ services:
       - AWS_BUCKET=${AWS_BUCKET:-local}
       - AWS_USE_PATH_STYLE_ENDPOINT=true
       - AWS_ENDPOINT=http://minio:9000
-      - AWS_URL=https://s3.lisovyi.me/local
+      - AWS_URL=${AWS_URL:-https://s3.lisovyi.me/local}
     volumes:
       - ./storage/logs:/app/storage/logs
       - ./storage/app/public:/app/storage/app/public
@@ -48,7 +48,7 @@ services:
       - AWS_BUCKET=${AWS_BUCKET:-local}
       - AWS_USE_PATH_STYLE_ENDPOINT=true
       - AWS_ENDPOINT=http://minio:9000
-      - AWS_URL=https://s3.lisovyi.me/local
+      - AWS_URL=${AWS_URL:-https://s3.lisovyi.me/local}
     volumes:
       - ./storage/logs:/app/storage/logs
       - ./storage/app/public:/app/storage/app/public

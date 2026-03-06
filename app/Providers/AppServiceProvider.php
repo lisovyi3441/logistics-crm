@@ -34,9 +34,9 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
         Model::shouldBeStrict(! $this->app->isProduction());
 
-        if ($this->app->isProduction()) {
-            URL::forceScheme('https');
-        }
+        // if ($this->app->isProduction()) {
+        //     URL::forceScheme('https');
+        // }
 
         Gate::before(function ($user, $ability) {
             return $user->hasRole('admin') ? true : null;
