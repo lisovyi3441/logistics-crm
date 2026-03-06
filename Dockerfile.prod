@@ -73,4 +73,5 @@ RUN chmod -R 775 storage bootstrap/cache
 EXPOSE 80
 
 # Configure FrankenPHP to run Laravel Octane worker
-CMD ["php", "artisan", "octane:start", "--server=frankenphp", "--host=0.0.0.0", "--port=80", "--admin-port=2019"]
+ENV FRANKENPHP_BINARY=/usr/local/bin/frankenphp
+CMD ["php", "artisan", "octane:start", "--server=frankenphp", "--host=0.0.0.0", "--port=80", "--admin-port=2019", "--workers=1"]

@@ -19,6 +19,7 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           passphrase: ${{ secrets.DO_SSH_PASSPHRASE }}
           script: |
+            set -e # 🛑 Stop script execution if any command fails!
             cd ${{ secrets.DO_PROJECT_PATH }}
             git fetch origin main
             git reset --hard origin/main
@@ -38,7 +39,7 @@ jobs:
             docker compose -f docker-compose.prod.yml exec -T app php artisan view:cache
 
             # Restart the container to reload Octane workers safely
-            docker compose -f docker-compose.prod.yml restart app
+            docker compose -f docker-compose.prod.yml restart app queue
 
             # Setup Cron for Laravel Scheduler (recreates to ensure updated path)
             crontab -l 2>/dev/null | grep -v "schedule:run" | crontab -

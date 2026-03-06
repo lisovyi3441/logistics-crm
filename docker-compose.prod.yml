@@ -16,12 +16,16 @@ services:
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
       - AWS_BUCKET=${AWS_BUCKET:-local}
       - AWS_USE_PATH_STYLE_ENDPOINT=true
-      - AWS_ENDPOINT=http://minio:9000
+      - AWS_ENDPOINT=http://global-minio:9000
     volumes:
       - ./storage/logs:/app/storage/logs
       - ./storage/app/public:/app/storage/app/public
     networks:
       - shared_network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   queue:
     build:
@@ -40,7 +44,7 @@ services:
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
       - AWS_BUCKET=${AWS_BUCKET:-local}
       - AWS_USE_PATH_STYLE_ENDPOINT=true
-      - AWS_ENDPOINT=http://minio:9000
+      - AWS_ENDPOINT=http://global-minio:9000
     volumes:
       - ./storage/logs:/app/storage/logs
       - ./storage/app/public:/app/storage/app/public
@@ -48,36 +52,12 @@ services:
       - shared_network
     depends_on:
       - app
+    deploy:
+      resources:
+        limits:
+          memory: 128M
 
-  minio:
-    image: minio/minio:latest
-    restart: unless-stopped
-    environment:
-      MINIO_ROOT_USER: "${AWS_ACCESS_KEY_ID:-sail}"
-      MINIO_ROOT_PASSWORD: "${AWS_SECRET_ACCESS_KEY:-password}"
-    command: server /data --console-address ":8900"
-    volumes:
-      - ./storage/minio:/data
-    networks:
-      - shared_network
 
-  minio-setup:
-    image: minio/mc:latest
-    depends_on:
-      - minio
-    environment:
-      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID:-sail}"
-      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY:-password}"
-      AWS_BUCKET: "${AWS_BUCKET:-local}"
-    entrypoint: >
-      /bin/sh -c "
-      until (/usr/bin/mc alias set myminio http://minio:9000 \${AWS_ACCESS_KEY_ID} \${AWS_SECRET_ACCESS_KEY}); do echo 'Waiting for MinIO...'; sleep 3; done;
-      /usr/bin/mc mb myminio/\${AWS_BUCKET} --ignore-existing;
-      /usr/bin/mc anonymous set public myminio/\${AWS_BUCKET};
-      exit 0;
-      "
-    networks:
-      - shared_network
 
 networks:
   shared_network:
