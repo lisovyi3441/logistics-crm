@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile.prod
     image: logistics-crm:latest
     restart: unless-stopped
+    mem_limit: 256m
     env_file:
       - .env
     environment:
@@ -33,6 +34,7 @@ services:
       dockerfile: Dockerfile.prod
     image: logistics-crm:latest
     restart: unless-stopped
+    mem_limit: 128m
     command: php artisan queue:work --tries=3 --timeout=90
     env_file:
       - .env
