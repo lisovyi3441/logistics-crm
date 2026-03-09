@@ -19,21 +19,25 @@ class AssignTruckAction
      */
     public function execute(Order $order, int $truckId): void
     {
-        if (in_array($order->status, [OrderStatus::IN_TRANSIT, OrderStatus::DELIVERED, OrderStatus::CANCELED], true)) {
-            throw ValidationException::withMessages([
-                'truck_id' => 'Cannot assign a truck to an order that is already in transit, delivered, or canceled.',
-            ]);
-        }
+        DB::transaction(function () use ($order, $truckId) {
+            // Acquire pessimistic lock on the order and refresh data to prevent race conditions
+            Order::where('id', $order->id)->lockForUpdate()->value('id');
+            $order->refresh();
 
-        $truck = Truck::find($truckId);
+            if (in_array($order->status, [OrderStatus::IN_TRANSIT, OrderStatus::DELIVERED, OrderStatus::CANCELED], true)) {
+                throw ValidationException::withMessages([
+                    'truck_id' => 'Cannot assign a truck to an order that is already in transit, delivered, or canceled.',
+                ]);
+            }
 
-        if ($order->vehicle_type_id && $truck->vehicle_type_id !== $order->vehicle_type_id) {
-            throw ValidationException::withMessages([
-                'truck_id' => 'The selected physical truck does not match the requested Vehicle Type for this order.',
-            ]);
-        }
+            $truck = Truck::find($truckId);
 
-        DB::transaction(function () use ($order, $truck) {
+            if ($order->vehicle_type_id && $truck->vehicle_type_id !== $order->vehicle_type_id) {
+                throw ValidationException::withMessages([
+                    'truck_id' => 'The selected physical truck does not match the requested Vehicle Type for this order.',
+                ]);
+            }
+
             $oldPrice = $order->total_price_cents;
             $order->update([
                 'truck_id' => $truck->id,
