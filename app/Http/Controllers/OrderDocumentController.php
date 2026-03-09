@@ -41,9 +41,10 @@ class OrderDocumentController extends Controller
 
         if ($action === 'view') {
             $file = \Illuminate\Support\Facades\Storage::disk('s3')->get($document->path);
+
             return response($file, 200, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="' . basename($document->path) . '"',
+                'Content-Disposition' => 'inline; filename="'.basename($document->path).'"',
             ]);
         }
 

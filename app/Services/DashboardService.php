@@ -55,7 +55,7 @@ class DashboardService
             'total_price' => number_format((float) $order->total_price_cents / 100, 2, '.', ''),
             'total_price_cents' => $order->total_price_cents,
             'currency' => $order->currency,
-            'created_at' => $order->created_at->format('M d, Y'),
+            'created_at' => $order->created_at->toIso8601String(),
         ], $query->take($limit)->get()->all());
     }
 }

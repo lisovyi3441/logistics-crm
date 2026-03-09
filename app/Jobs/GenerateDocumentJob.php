@@ -31,14 +31,14 @@ class GenerateDocumentJob implements ShouldQueue
         $path = "orders/{$this->order->order_number}/{$fileName}";
 
         $pdf = Pdf::loadView($viewName, [
-            'order' => $this->order->load(['company', 'items'])
+            'order' => $this->order->load(['company', 'items']),
         ]);
 
         $uploaded = Storage::disk('s3')->put($path, $pdf->output());
 
-    if (! $uploaded) {
-        throw new \RuntimeException("Failed to upload generated document to S3 bucket. Path: {$path}");
-    }
+        if (! $uploaded) {
+            throw new \RuntimeException("Failed to upload generated document to S3 bucket. Path: {$path}");
+        }
 
         OrderDocument::updateOrCreate(
             ['order_id' => $this->order->id, 'document_type' => $this->type],

@@ -17,7 +17,7 @@ class OrderResource extends JsonResource
         return [
             'id' => $this->id,
             'order_number' => $this->order_number,
-            'created_at' => $this->created_at->format('M d, Y'),
+            'created_at' => $this->created_at->toIso8601String(),
             'total_price_cents' => $this->total_price_cents,
             'currency' => $this->currency,
 

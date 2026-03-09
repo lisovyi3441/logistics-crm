@@ -29,6 +29,12 @@ const formatMoney = (cents: number, currency: string = 'UAH') => {
     }).format(cents / 100);
 };
 
+const formatDate = (dateString: string) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('en-US', {
+        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+};
 </script>
 
 <template>
@@ -77,7 +83,7 @@ const formatMoney = (cents: number, currency: string = 'UAH') => {
                                     {{ order.order_number }}
                                 </TableCell>
                                 <TableCell class="text-xs text-muted-foreground whitespace-nowrap text-center">
-                                    {{ order.created_at }}
+                                    {{ formatDate(order.created_at) }}
                                 </TableCell>
                                 <TableCell class="font-medium text-center">{{ order.company.name }}</TableCell>
                                 <TableCell class="text-muted-foreground text-center">{{ order.user.name }}</TableCell>

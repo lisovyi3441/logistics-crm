@@ -35,6 +35,7 @@ defineProps<{
         status_label: string;
         status_color: string;
         total_price: string;
+        total_price_cents: number;
         currency: string;
         created_at: string;
     }>;
@@ -46,6 +47,13 @@ const formatMoney = (cents: number, currency: string = 'UAH') => {
         style: 'currency',
         currency: currency,
     }).format(cents / 100);
+};
+
+const formatDate = (dateString: string) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('en-US', {
+        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
 };
 </script>
 
@@ -61,7 +69,7 @@ const formatMoney = (cents: number, currency: string = 'UAH') => {
                 </div>
                 <div class="relative overflow-hidden rounded-xl border border-sidebar-border/70 bg-white p-6 shadow-sm dark:border-sidebar-border dark:bg-zinc-900">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total Revenue</p>
-                    <p class="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">${{ stats.totalRevenue }}</p>
+                    <p class="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">₴{{ stats.totalRevenue }}</p>
                 </div>
                 <div class="relative overflow-hidden rounded-xl border border-sidebar-border/70 bg-white p-6 shadow-sm dark:border-sidebar-border dark:bg-zinc-900">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Active Companies</p>
@@ -105,7 +113,7 @@ const formatMoney = (cents: number, currency: string = 'UAH') => {
                                 <TableCell class="text-center font-mono font-medium">
                                     {{ formatMoney(order.total_price_cents, order.currency) }}
                                 </TableCell>
-                                <TableCell class="text-xs text-muted-foreground text-center">{{ order.created_at }}</TableCell>
+                                <TableCell class="text-xs text-muted-foreground text-center">{{ formatDate(order.created_at) }}</TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>
