@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
-import { LayoutGrid, Package, Building, Users, Truck, Settings } from 'lucide-vue-next';
+import {
+    LayoutGrid,
+    Package,
+    Building,
+    Users,
+    Truck,
+    Settings,
+} from 'lucide-vue-next';
 import { computed } from 'vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -17,7 +24,6 @@ import {
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import AppLogo from './AppLogo.vue';
-
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user as any);
@@ -61,7 +67,9 @@ const mainNavItems = computed<NavItem[]>(() => {
         const isGlobal = can('view companies');
         items.push({
             title: isGlobal ? 'Companies' : 'My Company',
-            href: isGlobal ? '/companies' : `/companies/${user.value.company_id}`,
+            href: isGlobal
+                ? '/companies'
+                : `/companies/${user.value.company_id}`,
             icon: Building,
         });
     }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Package, ShieldCheck, Truck, Users } from 'lucide-vue-next';
-import { dashboard, login, register } from '@/routes';
+import { dashboard, login } from '@/routes';
 
 withDefaults(
     defineProps<{
