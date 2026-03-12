@@ -1,0 +1,13 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+
+    paths:
+        - app/
+
+    level: 5
+
+    ignoreErrors:
+        - '#Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection.*map.*contains unresolvable type.#'
+        - '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model::\$.*#'

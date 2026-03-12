@@ -15,11 +15,11 @@ use Inertia\Response;
 class CompanyController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of companies.
      */
     public function index(): Response
     {
-        abort_if(! auth()->user()->can(\App\Enums\Permissions::VIEW_COMPANIES->value), 403);
+        $this->authorize('viewAny', Company::class);
 
         $companies = Company::withCount(['users', 'orders'])->latest()->paginate(10);
 
@@ -29,11 +29,11 @@ class CompanyController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Show the form for creating a new company.
      */
     public function create(): Response
     {
-        abort_if(! auth()->user()->can(\App\Enums\Permissions::CREATE_COMPANIES->value), 403);
+        $this->authorize('create', Company::class);
 
         return Inertia::render('companies/Form', [
             'company' => null,
@@ -41,7 +41,7 @@ class CompanyController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created company in storage.
      */
     public function store(StoreCompanyRequest $request): RedirectResponse
     {
@@ -51,12 +51,11 @@ class CompanyController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified company.
      */
     public function show(Company $company): Response
     {
-        $user = auth()->user();
-        abort_if(! $user->can(\App\Enums\Permissions::VIEW_COMPANIES->value) && $user->company_id !== $company->id, 403);
+        $this->authorize('view', $company);
 
         $company->load('users.roles');
         $company->loadCount('orders');
@@ -67,13 +66,11 @@ class CompanyController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Show the form for editing the specified company.
      */
     public function edit(Company $company): Response
     {
-        $user = auth()->user();
-        // Mangers can edit their own company, or Admins with full EDIT permission
-        abort_if(! $user->can(\App\Enums\Permissions::EDIT_COMPANIES->value) && $user->company_id !== $company->id, 403);
+        $this->authorize('update', $company);
 
         return Inertia::render('companies/Form', [
             'company' => new CompanyResource($company),
@@ -81,7 +78,7 @@ class CompanyController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified company in storage.
      */
     public function update(UpdateCompanyRequest $request, Company $company): RedirectResponse
     {
@@ -91,13 +88,13 @@ class CompanyController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified company from storage.
      */
     public function destroy(Company $company): RedirectResponse
     {
-        abort_if(! auth()->user()->can(\App\Enums\Permissions::DELETE_COMPANIES->value), 403);
+        $this->authorize('delete', $company);
 
-        if ($company->users()->exists() || $company->orders()->exists()) {
+        if (! $company->canBeDeleted()) {
             return back()->withErrors([
                 'message' => 'Cannot delete company because it has associated users or orders. Please reassign or delete them first.',
             ]);

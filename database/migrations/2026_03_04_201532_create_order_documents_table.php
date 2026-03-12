@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('order_documents', function (Blueprint $table) {
             $table->id();
             $table->foreignId('order_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->string('document_type'); // 'cmr' or 'invoice'
             $table->string('path'); // S3 object path
             $table->timestamps();

@@ -86,8 +86,8 @@ const submit = () => {
                             type="text"
                             class="block w-full rounded-md border-zinc-300 py-2 pr-4 pl-3 font-mono uppercase shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-white"
                             required
-                            pattern="^[ABCEHIKMOPTXАВЕСНКІМОРТХabcehikmoptxавеснкімортх]{2}\s?\d{4}\s?[ABCEHIKMOPTXАВЕСНКІМОРТХabcehikmoptxавеснкімортх]{2}$"
-                            title="Format: AA 1234 BC or AA1234BC (Using valid Latin/Cyrillic characters: A,B,C,E,H,I,K,M,O,P,T,X / А,В,Е,К,М,Н,О,Р,С,Т,Х,І)"
+                            pattern="^[ABCEHIKMOPTXabcehikmoptx]{2}\s?\d{4}\s?[ABCEHIKMOPTXabcehikmoptx]{2}$"
+                            title="Format: AA 1234 BC or AA1234BC (Using valid Latin characters: A,B,C,E,H,I,K,M,O,P,T,X)"
                         />
                         <InputError
                             class="mt-2"

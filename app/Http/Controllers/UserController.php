@@ -8,7 +8,6 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Company;
-use App\Models\Order;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Arr;
@@ -20,11 +19,11 @@ use Spatie\Permission\Models\Role;
 class UserController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of users.
      */
     public function index(): Response
     {
-        abort_if(! auth()->user()->can(\App\Enums\Permissions::VIEW_USERS->value), 403);
+        $this->authorize('viewAny', User::class);
 
         $users = User::with(['company', 'roles'])->latest()->paginate(10);
 
@@ -34,23 +33,23 @@ class UserController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Show the form for creating a new user.
      */
     public function create(): Response
     {
-        abort_if(! auth()->user()->can(\App\Enums\Permissions::CREATE_USERS->value), 403);
+        $this->authorize('create', User::class);
 
         return Inertia::render('users/Form', [
             'user' => null,
-            'companies' => Company::select('id', 'name')->orderBy('name')->get(),
-            'roles' => Role::select('id', 'name')->orderBy('name')->get(),
+            'companies' => Company::select(['id', 'name'])->orderBy('name')->get(),
+            'roles' => Role::select(['id', 'name'])->orderBy('name')->get(),
             'default_company_id' => request()->query('company_id'),
             'redirect_to' => request()->query('redirect_to'),
         ]);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created user in storage.
      */
     public function store(StoreUserRequest $request): RedirectResponse
     {
@@ -73,22 +72,22 @@ class UserController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     * We don't have a specific user show page yet, usually handled by editing.
+     * Display the specified user.
+     * Currently no separate show page, usually handled via edit.
      */
     public function show(User $user): RedirectResponse
     {
-        abort_if(! auth()->user()->can(\App\Enums\Permissions::VIEW_USERS->value), 403);
+        $this->authorize('view', $user);
 
         return redirect()->route('users.edit', $user);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Show the form for editing the specified user.
      */
-    public function edit(User $user)
+    public function edit(User $user): Response|RedirectResponse
     {
-        abort_if(! auth()->user()->can(\App\Enums\Permissions::EDIT_USERS->value), 403);
+        $this->authorize('update', $user);
 
         if ($user->id === auth()->id()) {
             return redirect()->route('users.index')->withErrors(['message' => 'You cannot edit your own role/company here. Use the Profile settings.']);
@@ -98,14 +97,14 @@ class UserController extends Controller
 
         return Inertia::render('users/Form', [
             'user' => new UserResource($user),
-            'companies' => Company::select('id', 'name')->orderBy('name')->get(),
-            'roles' => Role::select('id', 'name')->orderBy('name')->get(),
+            'companies' => Company::select(['id', 'name'])->orderBy('name')->get(),
+            'roles' => Role::select(['id', 'name'])->orderBy('name')->get(),
             'redirect_to' => request()->query('redirect_to'),
         ]);
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified user in storage.
      */
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
@@ -134,17 +133,17 @@ class UserController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified user from storage.
      */
     public function destroy(User $user): RedirectResponse
     {
-        abort_if(! auth()->user()->can(\App\Enums\Permissions::DELETE_USERS->value), 403);
+        $this->authorize('delete', $user);
 
         if ($user->id === auth()->id()) {
             return back()->withErrors(['message' => 'You cannot delete yourself.']);
         }
 
-        if (Order::where('user_id', $user->id)->exists()) {
+        if (! $user->canBeDeleted()) {
             return back()->withErrors([
                 'message' => 'Cannot delete user because they have associated orders. Please reassign or delete the orders first.',
             ]);

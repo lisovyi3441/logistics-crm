@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 
-// Приймаємо дані
+// Define props
 defineProps<{
     orders: any;
     can_create: boolean;

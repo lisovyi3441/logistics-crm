@@ -21,25 +21,25 @@ class TruckSeeder extends Seeder
 
         // 2. Seed Vehicle Types
         $types = [
-            ['name' => 'Мікроавтобус (Бус)', 'max_weight_kg' => 1500, 'max_volume_cbm' => 12, 'base_price_per_km_cents' => 20],
-            ['name' => '5-тонник (Тент)', 'max_weight_kg' => 5000, 'max_volume_cbm' => 36, 'base_price_per_km_cents' => 35],
-            ['name' => '10-тонник (Ізотерм)', 'max_weight_kg' => 10000, 'max_volume_cbm' => 45, 'base_price_per_km_cents' => 50],
-            ['name' => 'Фура (Тент 22т)', 'max_weight_kg' => 22000, 'max_volume_cbm' => 86, 'base_price_per_km_cents' => 70],
-            ['name' => 'Фура (Рефрижератор 20т)', 'max_weight_kg' => 20000, 'max_volume_cbm' => 82, 'base_price_per_km_cents' => 85],
+            ['name' => 'Mini Van (L1H1)', 'max_weight_kg' => 1500, 'max_volume_cbm' => 12, 'base_price_per_km_cents' => 20],
+            ['name' => 'Box Truck (5t)', 'max_weight_kg' => 5000, 'max_volume_cbm' => 36, 'base_price_per_km_cents' => 35],
+            ['name' => 'Igloo Truck (10t)', 'max_weight_kg' => 10000, 'max_volume_cbm' => 45, 'base_price_per_km_cents' => 50],
+            ['name' => 'Mega Trailer (22t)', 'max_weight_kg' => 22000, 'max_volume_cbm' => 86, 'base_price_per_km_cents' => 70],
+            ['name' => 'Fridge Trailer (20t)', 'max_weight_kg' => 20000, 'max_volume_cbm' => 82, 'base_price_per_km_cents' => 85],
         ];
 
         $brandMap = [
-            'Мікроавтобус (Бус)' => ['Mercedes-Benz Sprinter', 'Renault Master', 'Volkswagen Crafter'],
-            '5-тонник (Тент)' => ['MAN TGL', 'IVECO Eurocargo', 'Mercedes-Benz Atego'],
-            '10-тонник (Ізотерм)' => ['DAF LF', 'Volvo FL', 'Renault D-Wide'],
-            'Фура (Тент 22т)' => ['DAF XF', 'Scania R450', 'Volvo FH16'],
-            'Фура (Рефрижератор 20т)' => ['Volvo FH', 'Scania S500', 'Mercedes-Benz Actros'],
+            'Mini Van (L1H1)' => ['Mercedes-Benz Sprinter', 'Renault Master', 'Volkswagen Crafter'],
+            'Box Truck (5t)' => ['MAN TGL', 'IVECO Eurocargo', 'Mercedes-Benz Atego'],
+            'Igloo Truck (10t)' => ['DAF LF', 'Volvo FL', 'Renault D-Wide'],
+            'Mega Trailer (22t)' => ['DAF XF', 'Scania R450', 'Volvo FH16'],
+            'Fridge Trailer (20t)' => ['Volvo FH', 'Scania S500', 'Mercedes-Benz Actros'],
         ];
 
         foreach ($types as $typeData) {
             $type = \App\Models\VehicleType::create($typeData);
 
-            // 3. Seed Physical Trucks (2 per type) with UA plates
+            // 3. Seed Physical Trucks (2 per type) with EU-style plates
             for ($i = 1; $i <= 2; $i++) {
                 $region = collect(['AA', 'BC', 'KA', 'CE', 'BX', 'AT', 'BH'])->random();
                 $letters = collect(['AA', 'AB', 'AC', 'AE', 'AH', 'AK', 'AM'])->random();

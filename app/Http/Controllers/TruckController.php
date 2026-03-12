@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TruckRequest;
 use App\Models\Truck;
 use App\Models\VehicleType;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class TruckController extends Controller
 {
-    public function index()
+    /**
+     * Display a listing of the trucks.
+     */
+    public function index(): Response
     {
-        abort_if(! auth()->user()->can(\App\Enums\Permissions::VIEW_TRUCKS->value), 403);
+        $this->authorize('viewAny', Truck::class);
 
         $trucks = Truck::with('vehicleType')
             ->withExists('activeOrders')
@@ -25,39 +29,39 @@ class TruckController extends Controller
         ]);
     }
 
-    public function create()
+    /**
+     * Show the form for creating a new truck.
+     */
+    public function create(): Response
     {
-        abort_if(! auth()->user()->can(\App\Enums\Permissions::CREATE_TRUCKS->value), 403);
+        $this->authorize('create', Truck::class);
 
         return Inertia::render('trucks/Form', [
             'vehicleTypes' => VehicleType::all(['id', 'name']),
         ]);
     }
 
-    public function store(Request $request)
+    /**
+     * Store a newly created truck in storage.
+     */
+    public function store(TruckRequest $request): RedirectResponse
     {
-        abort_if(! auth()->user()->can(\App\Enums\Permissions::CREATE_TRUCKS->value), 403);
+        $this->authorize('create', Truck::class);
 
-        $messages = [
-            'license_plate.regex' => 'The license plate format is invalid. Use Ukrainian format (e.g., AA 1234 BB) using either Latin or Cyrillic characters.',
-        ];
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'license_plate' => ['required', 'string', 'max:20', 'unique:trucks,license_plate', 'regex:/^[ABCEHIKMOPTXАВЕСНКІМОРТХ]{2}\s?\d{4}\s?[ABCEHIKMOPTXАВЕСНКІМОРТХ]{2}$/ui'],
-            'vehicle_type_id' => 'required|exists:vehicle_types,id',
-        ], $messages);
-
-        Truck::create($validated);
+        Truck::create($request->validated());
 
         return redirect()->route('trucks.index')->with('success', 'Truck added successfully.');
     }
 
-    public function edit(Truck $truck)
+    /**
+     * Show the form for editing the specified truck.
+     */
+    public function edit(Truck $truck): Response|RedirectResponse
     {
-        abort_if(! auth()->user()->can(\App\Enums\Permissions::EDIT_TRUCKS->value), 403);
+        $this->authorize('update', $truck);
 
-        if ($truck->activeOrders()->exists()) {
+        // Do not allow editing truck configuration if it's currently on a trip
+        if ($truck->isBusy()) {
             return redirect()->route('trucks.index')->with('error', 'Cannot edit a truck that is currently busy with an active order.');
         }
 
@@ -67,31 +71,30 @@ class TruckController extends Controller
         ]);
     }
 
-    public function update(Request $request, Truck $truck)
+    /**
+     * Update the specified truck in storage.
+     */
+    public function update(TruckRequest $request, Truck $truck): RedirectResponse
     {
-        abort_if(! auth()->user()->can(\App\Enums\Permissions::EDIT_TRUCKS->value), 403);
+        $this->authorize('update', $truck);
 
-        if ($truck->activeOrders()->exists()) {
+        if ($truck->isBusy()) {
             return redirect()->route('trucks.index')->with('error', 'Cannot update a truck that is currently busy with an active order.');
         }
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'license_plate' => ['required', 'string', 'max:20', Rule::unique('trucks')->ignore($truck->id), 'regex:/^[ABCEHIKMOPTXАВЕСНКІМОРТХ]{2}\s?\d{4}\s?[ABCEHIKMOPTXАВЕСНКІМОРТХ]{2}$/ui'],
-        ], [
-            'license_plate.regex' => 'The license plate format is invalid. Use Ukrainian format (e.g., AA 1234 BB) using either Latin or Cyrillic characters.',
-        ]);
-
-        $truck->update($validated);
+        $truck->update($request->validated());
 
         return redirect()->route('trucks.index')->with('success', 'Truck updated successfully.');
     }
 
-    public function destroy(Truck $truck)
+    /**
+     * Remove the specified truck from storage.
+     */
+    public function destroy(Truck $truck): RedirectResponse
     {
-        abort_if(! auth()->user()->can(\App\Enums\Permissions::DELETE_TRUCKS->value), 403);
+        $this->authorize('delete', $truck);
 
-        if ($truck->activeOrders()->exists()) {
+        if ($truck->isBusy()) {
             return redirect()->route('trucks.index')->with('error', 'Cannot delete a truck that is currently busy with an active order.');
         }
 

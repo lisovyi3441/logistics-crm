@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Models\Order;
@@ -30,19 +32,26 @@ class GenerateDocumentJob implements ShouldQueue
         $fileName = "{$this->type}-{$this->order->order_number}.pdf";
         $path = "orders/{$this->order->order_number}/{$fileName}";
 
-        $pdf = Pdf::loadView($viewName, [
-            'order' => $this->order->load(['company', 'items']),
-        ]);
+        try {
+            // Load necessary relations for PDF rendering
+            $this->order->load(['company', 'user', 'items']);
 
-        $uploaded = Storage::disk('s3')->put($path, $pdf->output());
+            $pdf = Pdf::loadView($viewName, [
+                'order' => $this->order,
+            ]);
 
-        if (! $uploaded) {
-            throw new \RuntimeException("Failed to upload generated document to S3 bucket. Path: {$path}");
+            $output = $pdf->output();
+
+            // Store the PDF on the configured disk (usually s3/minio)
+            Storage::disk('s3')->put($path, $output);
+
+            OrderDocument::updateOrCreate(
+                ['order_id' => $this->order->id, 'document_type' => $this->type],
+                ['path' => $path]
+            );
+        } catch (\Exception $e) {
+            \Log::error("Failed to generate or upload document ({$this->type}) for Order #{$this->order->order_number}: ".$e->getMessage());
+            throw $e;
         }
-
-        OrderDocument::updateOrCreate(
-            ['order_id' => $this->order->id, 'document_type' => $this->type],
-            ['path' => $path]
-        );
     }
 }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\Permissions;
+use App\Http\Resources\OrderResource;
 use App\Models\Company;
 use App\Models\Order;
 use App\Models\User;
@@ -11,19 +13,16 @@ use App\Models\User;
 class DashboardService
 {
     /**
-     * Get aggregate statistics for the dashboard.
+     * Get aggregated statistics for the dashboard.
      *
      * @return array<string, mixed>
      */
     public function getStats(?User $user = null): array
     {
-        $orderQuery = Order::query();
+        // Use our local scope for consistent access logic
+        $orderQuery = Order::forUser($user);
 
-        if ($user && ! $user->can(\App\Enums\Permissions::VIEW_GLOBAL_DASHBOARD->value)) {
-            $orderQuery->where('company_id', $user->company_id);
-        }
-
-        $activeCompanies = ($user && ! $user->can(\App\Enums\Permissions::VIEW_GLOBAL_DASHBOARD->value)) ? 1 : Company::count();
+        $activeCompanies = ($user && ! $user->can(Permissions::VIEW_GLOBAL_DASHBOARD->value)) ? 1 : Company::count();
 
         $totalRevenueCents = (clone $orderQuery)->where('status', '!=', 'canceled')->sum('total_price_cents');
 
@@ -35,27 +34,17 @@ class DashboardService
     }
 
     /**
-     * Get the most recent orders formatted for the dashboard presentation.
+     * Get recent orders list formatted for dashboard.
      */
     public function getRecentOrders(int $limit = 5, ?User $user = null): array
     {
-        $query = Order::with('company')->latest();
+        $orders = Order::forUser($user)
+            ->with(['company', 'user'])
+            ->latest()
+            ->take($limit)
+            ->get();
 
-        if ($user && ! $user->can(\App\Enums\Permissions::VIEW_GLOBAL_DASHBOARD->value)) {
-            $query->where('company_id', $user->company_id);
-        }
-
-        return array_map(fn (Order $order) => [
-            'id' => $order->id,
-            'order_number' => $order->order_number,
-            'company_name' => $order->company->name ?? 'N/A',
-            'status' => $order->status->value,
-            'status_label' => $order->status->label(),
-            'status_color' => $order->status->color(),
-            'total_price' => number_format((float) $order->total_price_cents / 100, 2, '.', ''),
-            'total_price_cents' => $order->total_price_cents,
-            'currency' => $order->currency,
-            'created_at' => $order->created_at->toIso8601String(),
-        ], $query->take($limit)->get()->all());
+        // Use OrderResource for standardized response
+        return OrderResource::collection($orders)->resolve();
     }
 }

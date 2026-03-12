@@ -17,13 +17,13 @@ class OrderFactory extends Factory
     public function definition(): array
     {
         $cities = [
-            ['address' => 'Київ, вул. Хрещатик, 1', 'lat' => 50.4501, 'lng' => 30.5234],
-            ['address' => 'Львів, пл. Ринок, 1', 'lat' => 49.8397, 'lng' => 24.0297],
-            ['address' => 'Одеса, вул. Дерибасівська, 1', 'lat' => 46.4825, 'lng' => 30.7233],
-            ['address' => 'Дніпро, пр. Дмитра Яворницького, 1', 'lat' => 48.4647, 'lng' => 35.0462],
-            ['address' => 'Харків, пл. Свободи, 1', 'lat' => 49.9935, 'lng' => 36.2304],
-            ['address' => 'Вінниця, вул. Соборна, 1', 'lat' => 49.2331, 'lng' => 28.4682],
-            ['address' => 'Івано-Франківськ, вул. Незалежності, 1', 'lat' => 48.9226, 'lng' => 24.7111],
+            ['address' => 'Kyiv, Khreshchatyk st., 1', 'lat' => 50.4501, 'lng' => 30.5234],
+            ['address' => 'Lviv, Rynok sq., 1', 'lat' => 49.8397, 'lng' => 24.0297],
+            ['address' => 'Odesa, Derybasivska st., 1', 'lat' => 46.4825, 'lng' => 30.7233],
+            ['address' => 'Dnipro, Dmytra Yavornytskoho ave., 1', 'lat' => 48.4647, 'lng' => 35.0462],
+            ['address' => 'Kharkiv, Svobody sq., 1', 'lat' => 49.9935, 'lng' => 36.2304],
+            ['address' => 'Vinnytsia, Soborna st., 1', 'lat' => 49.2331, 'lng' => 28.4682],
+            ['address' => 'Ivano-Frankivsk, Nezalezhnosti st., 1', 'lat' => 48.9226, 'lng' => 24.7111],
         ];
 
         $origin = fake()->randomElement($cities);

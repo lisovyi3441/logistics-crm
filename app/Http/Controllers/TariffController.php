@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateTariffRequest;
 use App\Models\Tariff;
 use App\Models\VehicleType;
-use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class TariffController extends Controller
 {
-    public function edit()
+    /**
+     * Show the form for editing tariffs.
+     */
+    public function edit(): Response
     {
-        abort_if(! auth()->user()->can(\App\Enums\Permissions::EDIT_TARIFFS->value), 403);
+        $this->authorize('update', Tariff::class);
 
         $tariff = Tariff::firstOrCreate([], [
             'price_per_km_cents' => 100,
@@ -28,19 +33,14 @@ class TariffController extends Controller
         ]);
     }
 
-    public function update(Request $request)
+    /**
+     * Update tariffs in storage.
+     */
+    public function update(UpdateTariffRequest $request): RedirectResponse
     {
-        abort_if(! auth()->user()->can(\App\Enums\Permissions::EDIT_TARIFFS->value), 403);
+        $this->authorize('update', Tariff::class);
 
-        $validated = $request->validate([
-            'insurance_rate_percent' => 'required|numeric|min:0|max:100',
-            'tax_rate_percent' => 'required|numeric|min:0|max:100',
-            'adr_surcharge_percent' => 'required|numeric|min:0|max:100',
-            'vehicle_types' => 'array',
-            'vehicle_types.*.id' => 'required|exists:vehicle_types,id',
-            'vehicle_types.*.base_price_per_km_cents' => 'required|integer|min:0',
-        ]);
-
+        $validated = $request->validated();
         $tariff = Tariff::first() ?? new Tariff;
 
         $vehicleTypesData = $validated['vehicle_types'] ?? [];

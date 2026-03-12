@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 
-// Приймаємо дані
+// Define props
 defineProps<{
     trucks: any; // length aware paginator
 }>();
@@ -49,7 +49,7 @@ const breadcrumbs = [
             <div
                 class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm"
             >
-                <!-- No internal scrollbar on desktop was requested: "вмістити на одному екрані" -->
+                <!-- No internal scrollbar on desktop was requested: "fit on one screen" -->
                 <!-- We use overflow-y-auto only for mobile if needed, or better: md:overflow-visible -->
                 <div
                     class="min-h-0 flex-1 overflow-x-auto rounded-t-xl md:overflow-y-hidden"

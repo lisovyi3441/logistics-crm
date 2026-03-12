@@ -20,15 +20,15 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $myCompany = Company::factory()->create([
-            'name' => 'ТОВ "Сучасна Логістика"',
+            'name' => 'Modern Logistics Ltd',
         ]);
 
         $clientCompany = Company::factory()->create([
-            'name' => 'ТОВ "Агро-Транзит"',
+            'name' => 'Agro-Transit LLC',
         ]);
 
         $adminUser = User::factory()->create([
-            'name' => 'Адміністратор',
+            'name' => 'Administrator',
             'email' => 'admin@gmail.com',
             'password' => bcrypt('password'),
             'company_id' => $myCompany->id,
@@ -36,7 +36,7 @@ class DatabaseSeeder extends Seeder
         $adminUser->assignRole('admin');
 
         $managerUser = User::factory()->create([
-            'name' => 'Менеджер Демо',
+            'name' => 'Demo Manager',
             'email' => 'manager@gmail.com',
             'password' => bcrypt('password'),
             'company_id' => $clientCompany->id,
@@ -44,7 +44,7 @@ class DatabaseSeeder extends Seeder
         $managerUser->assignRole('manager');
 
         $observerUser = User::factory()->create([
-            'name' => 'Спостерігач Демо',
+            'name' => 'Demo Observer',
             'email' => 'observer@gmail.com',
             'password' => bcrypt('password'),
             'company_id' => $clientCompany->id,
@@ -56,7 +56,7 @@ class DatabaseSeeder extends Seeder
             'user_id' => $managerUser->id,
         ]);
 
-        $cargoItems = ['Пшениця озима', 'Кукурудза', 'Соняшник', 'Добрива азотні', 'Палети з електронікою', 'Запчастини для с/г техніки', 'Медикаменти', 'Будівельні матеріали', 'Меблі', 'Одяг та текстиль'];
+        $cargoItems = ['Wheat', 'Corn', 'Sunflower', 'Nitrogen fertilizers', 'Pallets with electronics', 'Agricultural machinery parts', 'Medicines', 'Building materials', 'Furniture', 'Clothing and textiles'];
 
         foreach ($demoOrders as $order) {
             for ($i = 0; $i < rand(1, 4); $i++) {

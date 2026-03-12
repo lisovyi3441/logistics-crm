@@ -27,16 +27,11 @@ class OrderController extends Controller
         $this->authorize('viewAny', Order::class);
         $user = auth()->user();
 
-        $query = Order::with('company', 'user')->latest();
-
-        // RBAC Scoping:
-        // Admin: all orders
-        // Manager & Observer: all orders in their company
-        if ($user && ! $user->can(Permissions::VIEW_ALL_ORDERS->value)) {
-            $query->where('company_id', $user->company_id);
-        }
-
-        $orders = $query->paginate(10);
+        // Use local scope for automatic filtering of orders based on permissions
+        $orders = Order::forUser($user)
+            ->with(['company', 'user'])
+            ->latest()
+            ->paginate(10);
 
         return Inertia::render('orders/Index', [
             'orders' => OrderResource::collection($orders),
@@ -50,8 +45,9 @@ class OrderController extends Controller
         $user = auth()->user();
         $companies = [];
 
+        // Only admins (or those who view all companies) can choose a company for the order
         if ($user->can(Permissions::VIEW_COMPANIES->value)) {
-            $companies = Company::select('id', 'name')->get();
+            $companies = Company::select(['id', 'name'])->get();
         }
 
         $vehicleTypes = VehicleType::get(['id', 'name', 'max_weight_kg', 'max_volume_cbm']);
@@ -70,6 +66,8 @@ class OrderController extends Controller
         $user = auth()->user();
         $validated = $request->validated();
 
+        // If user has permission to manage all companies (Admin), use the ID from request.
+        // Otherwise, automatically assign the order to the user's company.
         $companyId = $user->can(Permissions::VIEW_COMPANIES->value) ? $validated['company_id'] : $user->company_id;
 
         $action->execute($user, $validated, $companyId);
@@ -82,9 +80,11 @@ class OrderController extends Controller
         $this->authorize('view', $order);
         $user = auth()->user();
 
+        // Load all necessary relations along with loading users for status history
         $order->load(['company', 'user', 'items', 'statusHistories.user', 'truck', 'vehicleType', 'documents']);
 
         $trucks = [];
+        // Truck list is only needed for those who have permission to assign them
         if ($user->can(Permissions::ASSIGN_TRUCKS->value)) {
             $trucks = Truck::get(['id', 'name']);
         }

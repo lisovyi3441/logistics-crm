@@ -1,73 +1,60 @@
-# Logistics CRM - B2B SaaS for Freight Management
+# Logistics CRM — Enterprise Freight Management SaaS
 
-[![PHP Version](https://img.shields.io/badge/PHP-8.4-777BB4.svg?logo=php&logoColor=white)](https://php.net/)
-[![Laravel Version](https://img.shields.io/badge/Laravel-12.x-FF2D20.svg?logo=laravel&logoColor=white)](https://laravel.com)
-[![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D.svg?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
-[![Pest PHP](https://img.shields.io/badge/Pest-Coverage_100%25-FF2D20.svg)](https://pestphp.com)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
+[![Laravel 12](https://img.shields.io/badge/Laravel-12.x-red.svg)](https://laravel.com)
+[![Vue 3](https://img.shields.io/badge/Vue-3.x-emerald.svg)](https://vuejs.org)
+[![Inertia.js v2](https://img.shields.io/badge/Inertia.js-v2.0-blue.svg)](https://inertiajs.com)
+[![Pest Testing](https://img.shields.io/badge/Pest-v3.0-pink.svg)](https://pestphp.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Logistics CRM** is an advanced, enterprise-grade B2B platform designed for freight and logistics management. It demonstrates modern architectural patterns, strict domain logic isolation, and high-performance infrastructure setup.
-
-## 🚀 Live Demo
-
-**URL:** [crm.lisovyi.me](https://crm.lisovyi.me)
-
-### Test Accounts:
-
-The database is pre-seeded with role-specific accounts. You can use the 1-click login on the Welcome page or use these credentials (Password for all: `password`):
-
-- **Admin** (Full Access): `admin@gmail.com`
-- **Manager** (Company Scoped): `manager@gmail.com`
-- **Observer** (Read-Only): `observer@gmail.com`
+A high-performance B2B Logistics CRM designed for freight companies and their clients. Built with a focus on **concurrency safety**, **strict multi-tenancy**, and **automated logistics workflows**.
 
 ---
 
-## 🏗 Requirements & Tech Stack
+## 🚀 Key Features
 
-This project was built focusing on **Engineering Excellence**, moving past standard CRUD operations to tackle complex business logic, strict validation, and global infrastructure deployment.
-
-- **Core:** PHP 8.4, Laravel 12
-- **Performance:** Laravel Octane (FrankenPHP), Redis
-- **Architecture:** Pipeline Pattern (Pricing Engine), Service Contracts, Multi-tenant Data Isolation
-- **Access Control:** Spatie Laravel Permission (Declarative RBAC via Enums)
-- **Testing:** Pest PHP (100% coverage of core business rules)
-- **Frontend:** Vue 3 (Composition API), Inertia.js v2, Tailwind CSS v4, Radix Vue
-- **Infrastructure:** Docker, Nginx Proxy Manager, MinIO (S3-compatible storage), DigitalOcean
-- **External APIs:** OSRM (Open Source Routing Machine)
+- **Advanced Pricing Engine:** Implemented via the **Pipeline Pattern**. Calculates base rates, ADR surcharges, insurance fees, and volume discounts.
+- **Strict Multi-tenancy:** Data isolation between logistics providers and client companies using Eloquent Global Scopes.
+- **Concurrency Protection:** Uses **Pessimistic Locking** (`lockForUpdate`) to prevent race conditions during truck assignment and status changes.
+- **Inertia v2 Architecture:** Leverages **Deferred Props** for instant dashboard loading and **Wayfinder** for typed routing between PHP and TypeScript.
+- **GIS Integration:** Real-time distance and transit time calculations via OSRM API with automatic Redis caching and Haversine fallback.
+- **Automated Document Flow:** Background generation of **CMR** and **Invoices** (PDF) using Laravel Queues and MinIO (S3) storage.
+- **Role-Based Access Control (RBAC):** Granular permissions for Admins, Managers, and Observers via Spatie Permissions.
 
 ---
 
-## 🌟 Key Architectural Features
+## 🛠️ Tech Stack
 
-1.  **Pricing Engine via Pipeline Pattern**
-    Order pricing is decoupled into isolated, testable pipeline stages (Base Price, ADR Surcharges, Insurance, Taxes). This allows dynamic cost calculations based on vehicle limits and distances without cluttering the models.
-2.  **Transactional Integrity**
-    All critical business operations (such as assigning a truck or changing order statuses) are strictly wrapped in Database Transactions to prevent data race conditions.
-3.  **Strict Domain Validation & Data Isolation**
-    The system employs multi-tenancy. Managers and Observers can only interact with entities that belong to their specific `company_id`. Global scopes and Gates guarantee data safety.
-4.  **Automated Document Generation (Jobs & S3)**
-    CMRs and Invoices are generated asynchronously via Laravel Queue Jobs (leveraging `DOMPDF`). Documents are securely stored in S3-compatible object storage (MinIO) and retrieved via localized short-lived URLs.
-5.  **Geospatial Routing (GIS Integration)**
-    Orders calculate real transit times and distances via integration with the OSRM routing engine API, cached via Redis to prevent rate-limiting on high-load operations.
+- **Backend:** PHP 8.5+, Laravel 12, Octane (FrankenPHP).
+- **Frontend:** Vue 3 (Composition API), Inertia.js v2, Tailwind CSS v4.
+- **Database:** MySQL 8.4, Redis (Caching/Sessions).
+- **Storage:** MinIO / AWS S3 (Documents & Assets).
+- **Testing:** Pest (Feature & Unit tests, 100% Core Logic Coverage).
+- **DevOps:** Docker (Sail), GitHub Actions (CI/CD), Nginx Proxy Manager.
 
 ---
 
-## � Local Development (Laravel Sail)
+## 📖 Documentation
 
-The easiest way to get started is by using Laravel Sail, a light-weight command-line interface for interacting with Laravel's default Docker development environment.
+Detailed technical documentation is available in the [`/readme/en`](./readme/en) directory:
 
-### 1. Clone & Setup
+1. [Architecture & Patterns](./readme/en/architecture_and_patterns.md) — Deep dive into Actions, Pipelines, and Locking.
+2. [Business Logic & RBAC](./readme/en/business_logic.md) — Roles, permissions, and multi-tenancy.
+3. [Database Schema](./readme/en/database_schema.md) — Entity relationships and optimization.
+4. [Frontend & UI/UX](./readme/en/frontend_and_ui.md) — Vue 3 patterns and GIS integration.
+5. [Infrastructure & Deployment](./readme/en/infrastructure_and_deployment.md) — Docker, Octane, and CI/CD setup.
+6. [Testing Architecture](./readme/en/testing.md) — Strategy for 100% reliable business logic.
 
+---
+
+## ⚙️ Quick Start (Local Development)
+
+### 1. Clone the repository
 ```bash
 git clone https://github.com/lisovyi3441/logistics-crm.git
 cd logistics-crm
-cp .env.example .env
 ```
 
-### 2. Install Dependencies
-
-If you don't have PHP installed locally, you can use a small Docker container to install the Composer dependencies:
-
+### 2. Setup with Laravel Sail
 ```bash
 docker run --rm \
     -u "$(id -u):$(id -g)" \
@@ -75,44 +62,33 @@ docker run --rm \
     -w /var/www/html \
     laravelsail/php84-composer:latest \
     composer install --ignore-platform-reqs
-```
 
-### 3. Start Containers
-
-```bash
+cp .env.example .env
 ./vendor/bin/sail up -d
-```
-
-### 4. Initialize Database & Frontend
-
-```bash
 ./vendor/bin/sail artisan key:generate
-./vendor/bin/sail artisan migrate:fresh --seed
+./vendor/bin/sail artisan migrate --seed
 ./vendor/bin/sail npm install
 ./vendor/bin/sail npm run dev
 ```
 
-Your application should now be accessible at `http://localhost`.
+### 3. Demo Access
+Visit `http://localhost` and use the **1-Click Login** buttons on the Welcome page:
+- **Admin:** `admin@gmail.com` / `password`
+- **Manager:** `manager@gmail.com` / `password`
 
 ---
 
-## ✅ Testing & Code Quality
+## ✅ Quality Standards
 
-The project maintains **100% test coverage** for all critical business actions and policy enforcement using Pest PHP.
-
-**Run the Test Suite:**
-
-```bash
-./vendor/bin/sail artisan test --compact
-```
-
-**Run Code Formatter (Laravel Pint):**
-
-```bash
-./vendor/bin/sail bin pint
-```
+The project maintains high code quality standards:
+- **Static Analysis:** PHPStan/Larastan (Level 9).
+- **Formatting:** Laravel Pint (Strict preset).
+- **Testing:** Automated CI/CD pipeline on every push.
 
 ---
 
-_This project is built and maintained by **Maksym Lisovyi**._
-_Portfolio: [lisovyi.me](https://lisovyi.me) | LinkedIn: [Maksym Lisovyi](https://www.linkedin.com/in/marl-lis/)_
+## 📄 License
+
+The MIT License (MIT). Please see [License File](LICENSE) for more information.
+
+Developed with ❤️ by **Maksym Lisovyi**.

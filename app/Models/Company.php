@@ -29,4 +29,12 @@ class Company extends Model
     {
         return $this->hasMany(Order::class);
     }
+
+    /**
+     * Check if the company can be safely deleted.
+     */
+    public function canBeDeleted(): bool
+    {
+        return ! $this->users()->exists() && ! $this->orders()->exists();
+    }
 }

@@ -1,7 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests;
 
+use App\Enums\Permissions;
+use App\Rules\MaxPayloadVolumeRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreOrderRequest extends FormRequest
@@ -15,7 +19,7 @@ class StoreOrderRequest extends FormRequest
     }
 
     /**
-     * Prepare the data for validation.
+     * Prepare data for validation.
      */
     protected function prepareForValidation(): void
     {
@@ -43,7 +47,7 @@ class StoreOrderRequest extends FormRequest
                 'required',
                 'array',
                 'min:1',
-                new \App\Rules\MaxPayloadVolumeRule($this->input('vehicle_type_id')),
+                new MaxPayloadVolumeRule($this->input('vehicle_type_id')),
             ],
             'items.*.name' => ['required', 'string', 'max:255'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
@@ -63,7 +67,7 @@ class StoreOrderRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
 
-        if (auth()->user()->can(\App\Enums\Permissions::VIEW_COMPANIES->value)) {
+        if (auth()->user()->can(Permissions::VIEW_COMPANIES->value)) {
             $rules['company_id'] = ['required', 'exists:companies,id'];
         }
 
@@ -71,13 +75,13 @@ class StoreOrderRequest extends FormRequest
     }
 
     /**
-     * Get custom messages for validator errors.
+     * Custom validation messages.
      */
     public function messages(): array
     {
         return [
             'items.required' => 'At least one item must be added to the order.',
-            'items.*.name.required' => 'The item name is required.',
+            'items.*.name.required' => 'Product name is required.',
             'items.*.quantity.min' => 'Quantity must be at least 1.',
             'items.*.weight_kg.min' => 'Weight must be greater than 0.',
         ];

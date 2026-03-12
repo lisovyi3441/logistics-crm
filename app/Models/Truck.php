@@ -36,4 +36,12 @@ class Truck extends Model
             OrderStatus::IN_TRANSIT->value,
         ]);
     }
+
+    /**
+     * Check if the truck is currently associated with active shipments.
+     */
+    public function isBusy(): bool
+    {
+        return $this->activeOrders()->exists();
+    }
 }

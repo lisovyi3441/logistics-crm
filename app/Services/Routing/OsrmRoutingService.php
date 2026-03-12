@@ -7,6 +7,9 @@ namespace App\Services\Routing;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Service for interacting with OSRM (Open Source Routing Machine).
+ */
 class OsrmRoutingService implements RoutingServiceInterface
 {
     /**
@@ -21,7 +24,7 @@ class OsrmRoutingService implements RoutingServiceInterface
      */
     public function getRoute(float $originLat, float $originLng, float $destinationLat, float $destinationLng): array
     {
-        // Create a unique hash for these specific coordinates to use as a Redis cache key
+        // Generate a unique hash for these coordinates to use as Redis cache key
         $cacheKey = 'route_'.md5("{$originLat},{$originLng}-{$destinationLat},{$destinationLng}");
 
         return \Illuminate\Support\Facades\Cache::remember($cacheKey, now()->addDay(), function () use ($originLat, $originLng, $destinationLat, $destinationLng) {
@@ -38,11 +41,11 @@ class OsrmRoutingService implements RoutingServiceInterface
                     $route = $response->json()['routes'][0];
 
                     return [
-                        // OSRM returns distance in meters, convert to kilometers
+                        // OSRM returns distance in meters, convert to km
                         'distance_km' => round($route['distance'] / 1000, 2),
                         // OSRM returns duration in seconds, convert to minutes
                         'duration_minutes' => (int) round($route['duration'] / 60),
-                        // Return GeoJSON geometry for Leaflet mapping on the frontend
+                        // Return geometry for map rendering (Leaflet)
                         'geometry' => $route['geometry'],
                         'provider' => 'osrm',
                     ];
@@ -55,16 +58,16 @@ class OsrmRoutingService implements RoutingServiceInterface
                 ]);
 
             } catch (\Exception $e) {
-                Log::error('OSRM API Request Exception', ['message' => $e->getMessage()]);
+                Log::error('OSRM API request error', ['message' => $e->getMessage()]);
             }
 
-            // Fallback: If API fails, return straight-line estimates or defaults
+            // Fallback: if API is unavailable, calculate approximate values
             return $this->getFallbackRoute($originLat, $originLng, $destinationLat, $destinationLng);
         });
     }
 
     /**
-     * Calculate a rough straight-line Euclidean distance fallback if the API is down.
+     * Calculate approximate direct distance (Haversine formula) if API is unavailable.
      */
     private function getFallbackRoute(float $lat1, float $lng1, float $lat2, float $lng2): array
     {
@@ -78,7 +81,7 @@ class OsrmRoutingService implements RoutingServiceInterface
 
         return [
             'distance_km' => round($distance, 2),
-            // Rough estimate: assume 60km/h average speed in a straight line
+            // Rough estimate: assume average speed of 60 km/h
             'duration_minutes' => (int) round(($distance / 60) * 60),
             'geometry' => [
                 'type' => 'LineString',

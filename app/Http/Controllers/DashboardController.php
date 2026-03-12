@@ -10,6 +10,9 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
+    /**
+     * Service for handling dashboard data.
+     */
     protected DashboardService $dashboardService;
 
     public function __construct(DashboardService $dashboardService)
@@ -17,15 +20,16 @@ class DashboardController extends Controller
         $this->dashboardService = $dashboardService;
     }
 
+    /**
+     * Display the main dashboard page.
+     */
     public function index(): Response
     {
         $user = auth()->user();
 
         return Inertia::render('Dashboard', [
             'stats' => $this->dashboardService->getStats($user),
-            'recentOrders' => array_map(fn ($order) => array_merge($order, [
-                'url' => route('orders.show', $order['order_number']),
-            ]), $this->dashboardService->getRecentOrders(10, $user)),
+            'recentOrders' => $this->dashboardService->getRecentOrders(10, $user),
         ]);
     }
 }

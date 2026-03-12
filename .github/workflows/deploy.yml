@@ -1,4 +1,4 @@
-name: Deploy to DigitalOcean Droplet
+name: CI/CD Pipeline
 
 on:
   push:
@@ -7,9 +7,67 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  lint:
+    name: Code Quality (Lint)
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+
+      - name: Install Dependencies
+        run: |
+          composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+          npm install
+
+      - name: Run PHP Lint (Pint)
+        run: ./vendor/bin/pint --test
+
+      - name: Run Frontend Lint
+        run: npm run lint
+
+  tests:
+    name: Automated Tests (Pest)
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          tools: composer:v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Dependencies
+        run: |
+          composer install --no-interaction --prefer-dist --optimize-autoloader
+          npm install
+
+      - name: Prepare Environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Build Assets
+        run: npm run build
+
+      - name: Run Tests
+        run: ./vendor/bin/pest
+
+  deploy:
+    name: Deploy to DigitalOcean
+    needs: tests
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Deploying via SSH
         uses: appleboy/ssh-action@master
@@ -25,7 +83,7 @@ jobs:
             git reset --hard origin/main
 
             # Build and start the production container
-            docker compose -f docker-compose.prod.yml up -d --build
+            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
 
             # Wait a few seconds for the container to initialize
             sleep 5
@@ -41,6 +99,6 @@ jobs:
             # Restart the container to reload Octane workers safely
             docker compose -f docker-compose.prod.yml restart app queue
 
-            # Setup Cron for Laravel Scheduler (recreates to ensure updated path)
+            # Setup Cron for Laravel Scheduler
             crontab -l 2>/dev/null | grep -v "schedule:run" | crontab -
             (crontab -l 2>/dev/null; echo "* * * * * cd ${{ secrets.DO_PROJECT_PATH }} && PATH=\$$PATH:/usr/bin:/usr/local/bin:/snap/bin docker compose -f docker-compose.prod.yml exec -T app php artisan schedule:run >> /dev/null 2>&1") | crontab -

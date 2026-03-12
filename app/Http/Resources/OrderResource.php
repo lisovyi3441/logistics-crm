@@ -1,10 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Resources;
 
+use App\Enums\Permissions;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \App\Models\Order
+ */
 class OrderResource extends JsonResource
 {
     /**
@@ -20,6 +26,12 @@ class OrderResource extends JsonResource
             'created_at' => $this->created_at->toIso8601String(),
             'total_price_cents' => $this->total_price_cents,
             'currency' => $this->currency,
+
+            // Compatibility fields for legacy/simple UI components
+            'company_name' => $this->company->name ?? 'N/A',
+            'status_label' => $this->status->label(),
+            'status_color' => $this->status->color(),
+            'total_price' => number_format((float) $this->total_price_cents / 100, 2, '.', ''),
 
             // Detailed Pricing Breakdown
             'base_price_cents' => $this->base_price_cents,
@@ -48,12 +60,23 @@ class OrderResource extends JsonResource
                 ];
             }),
 
-            'company' => [
-                'name' => $this->company->name ?? 'N/A',
-            ],
-            'user' => [
+            'company' => $this->whenLoaded('company', function () {
+                return [
+                    'id' => $this->company->id,
+                    'name' => $this->company->name,
+                ];
+            }, [
+                'name' => $this->company->name ?? 'N/A', // fallback for compatibility with simple lists if not loaded
+            ]),
+
+            'user' => $this->whenLoaded('user', function () {
+                return [
+                    'id' => $this->user->id,
+                    'name' => $this->user->name,
+                ];
+            }, [
                 'name' => $this->user->name ?? 'N/A',
-            ],
+            ]),
 
             'status' => [
                 'label' => $this->status->label(),
@@ -63,9 +86,11 @@ class OrderResource extends JsonResource
                     fn ($st) => ['value' => $st->value, 'label' => $st->label()],
                     array_values(array_filter($this->status->allowedTransitions(), function ($st) {
                         $user = auth()->user();
-                        if ($user && ! $user->can(\App\Enums\Permissions::UPDATE_ORDER_STATUS->value)) {
+
+                        // Transition restriction logic: regular users can only cancel orders
+                        if ($user && ! $user->can(Permissions::UPDATE_ORDER_STATUS->value)) {
                             return $st->value === 'canceled' &&
-                                   $user->can(\App\Enums\Permissions::CANCEL_ORDERS->value) &&
+                                   $user->can(Permissions::CANCEL_ORDERS->value) &&
                                    in_array($this->status->value, ['new', 'pending'], true);
                         }
 

@@ -8,7 +8,7 @@ import {
     Loader2,
     ExternalLink,
 } from 'lucide-vue-next';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/AppLayout.vue';
 import 'leaflet/dist/leaflet.css';
@@ -114,6 +114,14 @@ const generateDocument = (type: 'cmr' | 'invoice') => {
 };
 
 const mapContainer = ref<HTMLElement | null>(null);
+let map: L.Map | null = null;
+
+onUnmounted(() => {
+    if (map) {
+        map.remove();
+        map = null;
+    }
+});
 
 onMounted(() => {
     // Only initialize map if we have coordinates
@@ -133,7 +141,7 @@ onMounted(() => {
                 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
         });
 
-        const map = L.map(mapContainer.value);
+        map = L.map(mapContainer.value);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors',
@@ -707,7 +715,7 @@ onMounted(() => {
                     class="border-b border-sidebar-border/70 bg-zinc-50 px-6 py-4 dark:border-sidebar-border dark:bg-zinc-800/50"
                 >
                     <h3 class="font-semibold text-zinc-900 dark:text-white">
-                        Order Items (Товари/Вантажі)
+                        Cargo Items (Order Details)
                     </h3>
                 </div>
                 <div class="overflow-x-auto">

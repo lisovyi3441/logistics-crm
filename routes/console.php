@@ -10,7 +10,7 @@ Artisan::command('inspire', function () {
 
 Schedule::command('migrate:fresh --seed --force')->cron('0 */4 * * *');
 Schedule::call(function () {
-    // Очищення бакета 'local' (MinIO S3)
+    // Clear the 'local' bucket (MinIO S3)
     \Illuminate\Support\Facades\Storage::disk('s3')->deleteDirectory('/');
 })->daily();
 Schedule::command('telescope:prune --hours=24')->daily();

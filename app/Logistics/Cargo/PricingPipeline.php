@@ -11,8 +11,14 @@ use App\Logistics\Cargo\Pipes\ApplyVolumeDiscount;
 use App\Logistics\Cargo\Pipes\CalculateBasePrice;
 use Illuminate\Pipeline\Pipeline;
 
+/**
+ * Pipeline for sequential order price calculation.
+ */
 class PricingPipeline
 {
+    /**
+     * Run the calculation chain.
+     */
     public function calculate(PricingData $data): PricingData
     {
         return app(Pipeline::class)

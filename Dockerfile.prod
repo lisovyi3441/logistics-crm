@@ -31,7 +31,7 @@ ENV VITE_SKIP_WAYFINDER=true
 RUN npm run build
 
 # Stage 2: Production Server (FrankenPHP)
-FROM dunglas/frankenphp:php8.4
+FROM dunglas/frankenphp:php8.5
 
 # Install unzip to speed up composer downloads
 RUN apt-get update && \

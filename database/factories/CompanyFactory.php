@@ -14,10 +14,10 @@ class CompanyFactory extends Factory
     public function definition(): array
     {
         $companies = [
-            'ТОВ "Агро-Транзит"', 'ПП "Захід Логістика"', 'ТОВ "МегаТранс"',
-            'ПАТ "Південний Експрес"', 'ФОП Коваленко І.В.', 'ТОВ "Схід Карго"',
-            'ПП "Київ-Трейд"', 'ТОВ "Дніпро-Вантаж"', 'ТОВ "Глобал Лоджистікс Укр"',
-            'ПрАТ "Одеса-Порт-Транс"',
+            'Agro-Transit LLC', 'West Logistics Ltd', 'MegaTrans Corp',
+            'South Express JSC', 'Kovalenko Freight', 'East Cargo LLC',
+            'Kyiv-Trade PE', 'Dnipro-Freight LLC', 'Global Logistics Ukr Ltd',
+            'Odesa-Port-Trans JSC',
         ];
 
         return [

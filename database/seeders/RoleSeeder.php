@@ -25,7 +25,7 @@ class RoleSeeder extends Seeder
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $adminRole->syncPermissions(Permission::all());
 
-        // Manager Role (Менеджер Клієнта)
+        // Manager Role (Client Manager)
         $managerRole = Role::firstOrCreate(['name' => 'manager']);
         $managerRole->syncPermissions([
             // Orders
@@ -38,7 +38,7 @@ class RoleSeeder extends Seeder
             Permissions::VIEW_COMPANY_DASHBOARD->value,
         ]);
 
-        // Observer Role (Спостерігач - тільки читання)
+        // Observer Role (Observer - Read-only)
         $observerRole = Role::firstOrCreate(['name' => 'observer']);
         $observerRole->syncPermissions([
             Permissions::VIEW_COMPANY_ORDERS->value,

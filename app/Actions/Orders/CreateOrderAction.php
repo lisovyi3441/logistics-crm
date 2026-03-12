@@ -13,10 +13,14 @@ use App\Services\Routing\RoutingServiceInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
+/**
+ * Action for creating a new order with logistics and pricing calculation.
+ */
 class CreateOrderAction
 {
     public function __construct(
-        private readonly RoutingServiceInterface $routingService
+        private readonly RoutingServiceInterface $routingService,
+        private readonly PricingPipeline $pricingPipeline
     ) {}
 
     public function execute(User $user, array $validatedData, ?int $companyIdOverride = null): Order
@@ -24,6 +28,7 @@ class CreateOrderAction
         $companyId = $companyIdOverride ?? $user->company_id;
 
         return DB::transaction(function () use ($validatedData, $user, $companyId) {
+            // Aggregate item data for pricing and logistics calculation
             $totalWeight = collect($validatedData['items'])->sum(fn ($i) => $i['weight_kg'] * $i['quantity']);
             $totalCbm = collect($validatedData['items'])->sum(fn ($i) => ($i['cbm'] ?? 0) * $i['quantity']);
             $isDangerous = collect($validatedData['items'])->contains(fn ($i) => $i['is_dangerous'] ?? false);
@@ -32,10 +37,11 @@ class CreateOrderAction
                 return $item['quantity'] * ($item['declared_value_cents'] ?? 0);
             });
 
-            $routeData = ['distance_km' => 1, 'duration_minutes' => 60]; // Defaults
+            $routeData = ['distance_km' => 1, 'duration_minutes' => 60]; // Default values
             if (! empty($validatedData['pickup_lat']) && ! empty($validatedData['pickup_lng']) &&
                 ! empty($validatedData['delivery_lat']) && ! empty($validatedData['delivery_lng'])) {
 
+                // Get real distance and transit time via routing service
                 $routeData = $this->routingService->getRoute(
                     (float) $validatedData['pickup_lat'],
                     (float) $validatedData['pickup_lng'],
@@ -51,8 +57,9 @@ class CreateOrderAction
                 distanceKm: (float) $routeData['distance_km'],
                 declaredValueCents: (float) $totalDeclaredValueCents,
             );
-            $pipeline = new PricingPipeline;
-            $pipelineResult = $pipeline->calculate($pricingData);
+
+            // Run data through the pricing pipeline (insurance, taxes, tariffs)
+            $pipelineResult = $this->pricingPipeline->calculate($pricingData);
 
             $totalPriceCents = (int) $pipelineResult->finalPriceCents;
 
@@ -63,13 +70,13 @@ class CreateOrderAction
                 'order_number' => 'ORD-'.strtoupper(Str::random(8)),
                 'status' => 'new',
 
-                // Pricing Breakdown
-                'total_price_cents' => $totalPriceCents,
-                'base_price_cents' => (int) $pipelineResult->basePriceCents,
-                'insurance_fee_cents' => (int) $pipelineResult->insuranceFeeCents,
-                'surcharge_cents' => (int) $pipelineResult->surchargeCents,
-                'discount_cents' => (int) $pipelineResult->discountCents,
-                'tax_cents' => (int) $pipelineResult->taxCents,
+                // Pricing Breakdown (Round to nearest cent to avoid float precision loss)
+                'total_price_cents' => (int) round($pipelineResult->finalPriceCents),
+                'base_price_cents' => (int) round($pipelineResult->basePriceCents),
+                'insurance_fee_cents' => (int) round($pipelineResult->insuranceFeeCents),
+                'surcharge_cents' => (int) round($pipelineResult->surchargeCents),
+                'discount_cents' => (int) round($pipelineResult->discountCents),
+                'tax_cents' => (int) round($pipelineResult->taxCents),
 
                 'currency' => 'UAH',
                 'notes' => $validatedData['notes'] ?? null,
@@ -107,7 +114,7 @@ class CreateOrderAction
                 'comment' => 'Order created.',
             ]);
 
-            return $order;
+            return $order->refresh();
         });
     }
 }

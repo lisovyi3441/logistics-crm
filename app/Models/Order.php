@@ -5,11 +5,32 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\OrderStatus;
+use App\Enums\Permissions;
+use App\Observers\OrderObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property \App\Enums\OrderStatus $status
+ * @property int $id
+ * @property string $order_number
+ * @property int $total_price_cents
+ * @property int $base_price_cents
+ * @property int $insurance_fee_cents
+ * @property int $surcharge_cents
+ * @property int $discount_cents
+ * @property int $tax_cents
+ * @property string $currency
+ * @property string|null $pickup_address
+ * @property string|null $delivery_address
+ * @property float|null $distance_km
+ * @property int|null $transit_time_minutes
+ * @property \Illuminate\Support\Carbon $created_at
+ */
+#[ObservedBy(OrderObserver::class)]
 class Order extends Model
 {
     use HasFactory;
@@ -80,6 +101,18 @@ class Order extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(OrderDocument::class);
+    }
+
+    /**
+     * Scope a query to only include orders visible to the given user.
+     */
+    public function scopeForUser($query, User $user)
+    {
+        if ($user->can(Permissions::VIEW_ALL_ORDERS->value)) {
+            return $query;
+        }
+
+        return $query->where('company_id', $user->company_id);
     }
 
     /**
