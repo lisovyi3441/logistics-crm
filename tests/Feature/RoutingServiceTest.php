@@ -49,6 +49,10 @@ it('falls back to haversine when api fails', function () {
     expect($route['distance_km'])->toBeGreaterThan(450)
         ->and($route['distance_km'])->toBeLessThan(480)
         ->and($route['provider'])->toBe('fallback_haversine');
+
+    // ENSURE FALLBACK IS NOT CACHED
+    $cacheKey = 'route_'.md5('50.45,30.52-49.83,24.02');
+    expect(Cache::has($cacheKey))->toBeFalse();
 });
 
 it('calculates price pipeline considering distance multiplier', function () {

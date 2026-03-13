@@ -16,11 +16,17 @@ class OrderObserver
     public function updated(Order $order): void
     {
         if ($order->isDirty('status')) {
+            $user = Auth::user();
+
+            $comment = $user
+                ? 'Updated manually.'
+                : 'Updated by the system.';
+
             $order->statusHistories()->create([
                 'user_id' => Auth::id(),
                 'old_status' => $order->getOriginal('status'),
                 'new_status' => $order->status,
-                'comment' => 'Status automatically updated by the system.',
+                'comment' => $comment,
             ]);
         }
     }

@@ -27,43 +27,51 @@ class OsrmRoutingService implements RoutingServiceInterface
         // Generate a unique hash for these coordinates to use as Redis cache key
         $cacheKey = 'route_'.md5("{$originLat},{$originLng}-{$destinationLat},{$destinationLng}");
 
-        return \Illuminate\Support\Facades\Cache::remember($cacheKey, now()->addDay(), function () use ($originLat, $originLng, $destinationLat, $destinationLng) {
-            // OSRM expects coordinates in lng,lat format
-            $coordinates = "{$originLng},{$originLat};{$destinationLng},{$destinationLat}";
-            $baseUrl = config('services.osrm.url', 'http://router.project-osrm.org/route/v1/driving');
+        // Check cache first
+        if ($cached = \Illuminate\Support\Facades\Cache::get($cacheKey)) {
+            return $cached;
+        }
 
-            $url = sprintf('%s/%s?overview=full&geometries=geojson', $baseUrl, $coordinates);
+        // OSRM expects coordinates in lng,lat format
+        $coordinates = "{$originLng},{$originLat};{$destinationLng},{$destinationLat}";
+        $baseUrl = config('services.osrm.url', 'http://router.project-osrm.org/route/v1/driving');
 
-            try {
-                $response = Http::timeout(5)->get($url);
+        $url = sprintf('%s/%s?overview=full&geometries=geojson', $baseUrl, $coordinates);
 
-                if ($response->successful() && isset($response->json()['routes'][0])) {
-                    $route = $response->json()['routes'][0];
+        try {
+            $response = Http::timeout(5)->get($url);
 
-                    return [
-                        // OSRM returns distance in meters, convert to km
-                        'distance_km' => round($route['distance'] / 1000, 2),
-                        // OSRM returns duration in seconds, convert to minutes
-                        'duration_minutes' => (int) round($route['duration'] / 60),
-                        // Return geometry for map rendering (Leaflet)
-                        'geometry' => $route['geometry'],
-                        'provider' => 'osrm',
-                    ];
-                }
+            if ($response->successful() && isset($response->json()['routes'][0])) {
+                $route = $response->json()['routes'][0];
 
-                Log::warning('OSRM API failed to return a valid route', [
-                    'url' => $url,
-                    'status' => $response->status(),
-                    'response' => $response->body(),
-                ]);
+                $result = [
+                    // OSRM returns distance in meters, convert to km
+                    'distance_km' => round($route['distance'] / 1000, 2),
+                    // OSRM returns duration in seconds, convert to minutes
+                    'duration_minutes' => (int) round($route['duration'] / 60),
+                    // Return geometry for map rendering (Leaflet)
+                    'geometry' => $route['geometry'],
+                    'provider' => 'osrm',
+                ];
 
-            } catch (\Exception $e) {
-                Log::error('OSRM API request error', ['message' => $e->getMessage()]);
+                // Cache successful result for a day
+                \Illuminate\Support\Facades\Cache::put($cacheKey, $result, now()->addDay());
+
+                return $result;
             }
 
-            // Fallback: if API is unavailable, calculate approximate values
-            return $this->getFallbackRoute($originLat, $originLng, $destinationLat, $destinationLng);
-        });
+            Log::warning('OSRM API failed to return a valid route', [
+                'url' => $url,
+                'status' => $response->status(),
+                'response' => $response->body(),
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('OSRM API request error', ['message' => $e->getMessage()]);
+        }
+
+        // Fallback: if API is unavailable, calculate approximate values (DO NOT CACHE FALLBACK)
+        return $this->getFallbackRoute($originLat, $originLng, $destinationLat, $destinationLng);
     }
 
     /**

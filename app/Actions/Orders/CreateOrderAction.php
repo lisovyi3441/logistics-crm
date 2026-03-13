@@ -27,42 +27,43 @@ class CreateOrderAction
     {
         $companyId = $companyIdOverride ?? $user->company_id;
 
-        return DB::transaction(function () use ($validatedData, $user, $companyId) {
-            // Aggregate item data for pricing and logistics calculation
-            $totalWeight = collect($validatedData['items'])->sum(fn ($i) => $i['weight_kg'] * $i['quantity']);
-            $totalCbm = collect($validatedData['items'])->sum(fn ($i) => ($i['cbm'] ?? 0) * $i['quantity']);
-            $isDangerous = collect($validatedData['items'])->contains(fn ($i) => $i['is_dangerous'] ?? false);
+        // Aggregate item data for pricing and logistics calculation
+        $totalWeight = collect($validatedData['items'])->sum(fn ($i) => $i['weight_kg'] * $i['quantity']);
+        $totalCbm = collect($validatedData['items'])->sum(fn ($i) => ($i['cbm'] ?? 0) * $i['quantity']);
+        $isDangerous = collect($validatedData['items'])->contains(fn ($i) => $i['is_dangerous'] ?? false);
 
-            $totalDeclaredValueCents = collect($validatedData['items'])->sum(function ($item) {
-                return $item['quantity'] * ($item['declared_value_cents'] ?? 0);
-            });
+        $totalDeclaredValueCents = collect($validatedData['items'])->sum(function ($item) {
+            return $item['quantity'] * ($item['declared_value_cents'] ?? 0);
+        });
 
-            $routeData = ['distance_km' => 1, 'duration_minutes' => 60]; // Default values
-            if (! empty($validatedData['pickup_lat']) && ! empty($validatedData['pickup_lng']) &&
-                ! empty($validatedData['delivery_lat']) && ! empty($validatedData['delivery_lng'])) {
+        // 1. Get real distance and transit time via routing service (STAY OUT OF TRANSACTION)
+        $routeData = ['distance_km' => 1, 'duration_minutes' => 60]; // Default values
+        if (! empty($validatedData['pickup_lat']) && ! empty($validatedData['pickup_lng']) &&
+            ! empty($validatedData['delivery_lat']) && ! empty($validatedData['delivery_lng'])) {
 
-                // Get real distance and transit time via routing service
-                $routeData = $this->routingService->getRoute(
-                    (float) $validatedData['pickup_lat'],
-                    (float) $validatedData['pickup_lng'],
-                    (float) $validatedData['delivery_lat'],
-                    (float) $validatedData['delivery_lng']
-                );
-            }
-
-            $pricingData = new PricingData(
-                weightKg: (float) $totalWeight,
-                cbm: (float) $totalCbm,
-                isDangerous: (bool) $isDangerous,
-                distanceKm: (float) $routeData['distance_km'],
-                declaredValueCents: (float) $totalDeclaredValueCents,
+            $routeData = $this->routingService->getRoute(
+                (float) $validatedData['pickup_lat'],
+                (float) $validatedData['pickup_lng'],
+                (float) $validatedData['delivery_lat'],
+                (float) $validatedData['delivery_lng']
             );
+        }
 
-            // Run data through the pricing pipeline (insurance, taxes, tariffs)
-            $pipelineResult = $this->pricingPipeline->calculate($pricingData);
+        // 2. Pre-calculate pricing (STAY OUT OF TRANSACTION)
+        $pricingData = new PricingData(
+            weightKg: (float) $totalWeight,
+            cbm: (float) $totalCbm,
+            isDangerous: (bool) $isDangerous,
+            distanceKm: (float) $routeData['distance_km'],
+            declaredValueCents: (float) $totalDeclaredValueCents,
+        );
+        // Pass vehicle_type_id if available to allow correct rate selection in pipeline
+        $pricingData->requestData = ['vehicle_type_id' => $validatedData['vehicle_type_id'] ?? null];
 
-            $totalPriceCents = (int) $pipelineResult->finalPriceCents;
+        $pipelineResult = $this->pricingPipeline->calculate($pricingData);
 
+        // 3. Persist data (INSIDE TRANSACTION)
+        return DB::transaction(function () use ($validatedData, $user, $companyId, $routeData, $pipelineResult) {
             $order = Order::create([
                 'user_id' => $user->id,
                 'company_id' => $companyId,

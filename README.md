@@ -60,13 +60,17 @@ docker run --rm \
     -u "$(id -u):$(id -g)" \
     -v "$(pwd):/var/www/html" \
     -w /var/www/html \
-    laravelsail/php84-composer:latest \
+    laravelsail/php85-composer:latest \
     composer install --ignore-platform-reqs
 
 cp .env.example .env
 ./vendor/bin/sail up -d
 ./vendor/bin/sail artisan key:generate
 ./vendor/bin/sail artisan migrate --seed
+
+# Ensure MinIO bucket exists for documents
+./vendor/bin/sail shell -c "mc alias set local http://minio:9000 sail password && mc mb local/local || true"
+
 ./vendor/bin/sail npm install
 ./vendor/bin/sail npm run dev
 ```
@@ -81,7 +85,7 @@ Visit `http://localhost` and use the **1-Click Login** buttons on the Welcome pa
 ## ✅ Quality Standards
 
 The project maintains high code quality standards:
-- **Static Analysis:** PHPStan/Larastan (Level 9).
+- **Static Analysis:** PHPStan/Larastan (Level 5 - Professional Standard).
 - **Formatting:** Laravel Pint (Strict preset).
 - **Testing:** Automated CI/CD pipeline on every push.
 

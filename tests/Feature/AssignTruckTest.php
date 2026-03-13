@@ -52,7 +52,7 @@ it('allows admin to assign a valid, free truck', function () {
 
     $this->assertDatabaseHas('order_status_histories', [
         'order_id' => $this->order->id,
-        'comment' => "Assigned truck {$this->truck->name} to the order.",
+        'comment' => "Assigned truck {$this->truck->name} to the order. Updated manually.",
     ]);
 });
 

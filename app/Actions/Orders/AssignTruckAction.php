@@ -41,8 +41,11 @@ class AssignTruckAction
                 ]);
             }
 
-            // Get the truck, optimizing with only required fields
-            $truck = Truck::select(['id', 'name', 'vehicle_type_id'])->findOrFail($truckId);
+            // Get the truck and lock it for update to prevent multiple assignments in concurrent requests
+            $truck = Truck::where('id', $truckId)
+                ->select(['id', 'name', 'vehicle_type_id'])
+                ->lockForUpdate()
+                ->firstOrFail();
 
             if ($order->vehicle_type_id && $truck->vehicle_type_id !== $order->vehicle_type_id) {
                 throw ValidationException::withMessages([
@@ -91,11 +94,14 @@ class AssignTruckAction
 
             // Note: We still log the truck assignment specifically because it's a unique event
             // but we ensure we don't duplicate general status changes.
+            $user = auth()->user();
+            $manualNote = $user ? ' Updated manually.' : ' Updated by the system.';
+
             $order->statusHistories()->create([
-                'user_id' => auth()->id() ?? 1,
+                'user_id' => auth()->id(),
                 'old_status' => $order->status->value,
                 'new_status' => $order->status->value,
-                'comment' => "Assigned truck {$truck->name} to the order.{$priceChangedNote}",
+                'comment' => "Assigned truck {$truck->name} to the order.{$priceChangedNote}{$manualNote}",
             ]);
         });
     }

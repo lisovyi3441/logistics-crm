@@ -10,7 +10,7 @@ To avoid "Fat Controllers" or bloated models, the project employs a strict **Act
 
 ### Example: `CreateOrderAction`
 Responsible solely for order creation, coordinating several services:
-1. Fetching distance/time via `RoutingServiceInterface`.
+1. Fetching distance/time via `RoutingServiceInterface` (**Outside of DB Transaction** to prevent connection pool exhaustion).
 2. Calculating price through the `PricingPipeline`.
 3. Persisting the `Order`, `OrderItems`, and `OrderStatusHistory` within a single **Database Transaction**.
 
@@ -26,8 +26,13 @@ Critical Actions use the database-level `lockForUpdate()` method (InnoDB Row-Lev
 **Example (from `AssignTruckAction.php`):**
 ```php
 DB::transaction(function () use ($order, $truckId) {
+    // 1. Lock the order to prevent status changes during assignment
     Order::where('id', $order->id)->lockForUpdate()->value('id');
     $order->refresh();
+
+    // 2. Lock the truck to prevent it from being assigned to another order simultaneously
+    $truck = Truck::where('id', $truckId)->lockForUpdate()->firstOrFail();
+
     // Safe validation and update logic...
 });
 ```
@@ -53,6 +58,8 @@ We use interfaces for external integrations to ensure flexibility and testabilit
 
 ### `RoutingServiceInterface`
 Allows switching between OSRM, Google Maps, or a Haversine fallback without changing business logic. It also enables easy mocking in tests.
+
+**Performance Note:** To ensure OSRM API latency doesn't block the database, all routing calls are performed **before** opening a database transaction. Results are cached in Redis for 24 hours (only successful API responses are cached to prevent "cache poisoning" from temporary failures).
 
 ---
 
@@ -103,4 +110,10 @@ class Order extends Model { ... }
 ```
 
 ### Automatic Audit Trail:
-The `OrderObserver` automatically listens for changes in the `status` field. When a change occurs, it generates a record in the `OrderStatusHistory` table. This keeps our business Actions (like `AssignTruckAction`) focused exclusively on their primary logic, while logging and auditing happen automatically in the background.
+The `OrderObserver` automatically listens for changes in the `status` field. When a change occurs, it generates a record in the `OrderStatusHistory` table. 
+
+**Intelligent Context:** The system automatically detects the initiator of the change:
+- If a user is logged in, the history record includes their ID and a comment: `"Updated manually."`.
+- If the change is triggered by a background process (Job/CLI), the record is marked as `"Updated by the system."`.
+
+This ensures a 100% reliable and transparent audit trail for both managers and clients.
