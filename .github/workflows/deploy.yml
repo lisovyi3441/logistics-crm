@@ -97,7 +97,7 @@ jobs:
             docker compose -f docker-compose.prod.yml exec -T app php artisan view:cache
 
             # Restart the container to reload Octane workers safely
-            docker compose -f docker-compose.prod.yml restart app queue
+            docker compose -f docker-compose.prod.yml restart app queue reverb
 
             # Setup Cron for Laravel Scheduler
             crontab -l 2>/dev/null | grep -v "schedule:run" | crontab -

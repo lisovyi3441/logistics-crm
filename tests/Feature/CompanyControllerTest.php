@@ -28,16 +28,17 @@ it('prevents manager from viewing companies index', function () {
 });
 
 it('allows admin to create a valid company', function () {
-    actingAs($this->admin)
+    $response = actingAs($this->admin)
         ->post('/companies', [
             'name' => 'Test Company',
             'vat_number' => 'PL123456789',
             'address' => 'Kyiv, Ukraine',
             'contact_phone' => '+380671234567',
             'contact_email' => 'test@gmail.com',
-        ])
-        ->assertRedirect(route('companies.index'));
+        ]);
 
+    $company = Company::where('name', 'Test Company')->first();
+    $response->assertRedirect(route('companies.show', $company));
     $this->assertDatabaseHas('companies', [
         'name' => 'Test Company',
         'vat_number' => 'PL123456789',
@@ -83,7 +84,7 @@ it('allows manager to edit their own company', function () {
             'name' => 'My Updated Company',
             'address' => 'Kyiv',
         ])
-        ->assertRedirect(route('companies.index'));
+        ->assertRedirect(route('companies.show', $company));
 
     $this->assertDatabaseHas('companies', [
         'id' => $company->id,

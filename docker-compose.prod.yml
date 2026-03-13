@@ -61,8 +61,28 @@ services:
         limits:
           memory: 128M
 
+    reverb:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    image: logistics-crm:latest
+    restart: unless-stopped
+    mem_limit: 128m
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+    networks:
+      - shared_network
+    depends_on:
+      - app
+    deploy:
+      resources:
+        limits:
+          memory: 128M
 
-
-networks:
+    networks:
   shared_network:
     external: true

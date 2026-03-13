@@ -116,4 +116,16 @@ The `OrderObserver` automatically listens for changes in the `status` field. Whe
 - If a user is logged in, the history record includes their ID and a comment: `"Updated manually."`.
 - If the change is triggered by a background process (Job/CLI), the record is marked as `"Updated by the system."`.
 
-This ensures a 100% reliable and transparent audit trail for both managers and clients.
+---
+
+## 📡 10. Real-time Infrastructure (WebSockets)
+
+The application uses **Laravel Reverb** for high-performance, real-time communication. This eliminates the need for manual page refreshes during long-running or collaborative tasks.
+
+### Key Real-time Features:
+- **Instant PDF Feedback:** When a background PDF generation job finishes, the UI is notified via the `DocumentGenerated` event, and the documents list performs a partial reload.
+- **Order Synchronization:** Any status change or truck assignment triggers an `OrderUpdated` event, syncing the state across all active managers of the same company.
+- **Optimized UI Updates:** Uses **Inertia v2 Partial Reloads** (`router.reload({ only: [...] })`), ensuring that only the necessary JSON data is fetched, preserving the frontend state and minimizing server load.
+
+### Deployment Architecture:
+In production, Reverb runs as a dedicated service within the Docker cluster, handling thousands of concurrent connections without impacting the main Octane application performance.

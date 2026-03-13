@@ -12,12 +12,13 @@ class UpdateCompanyRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $user = auth()->user();
-        $companyId = $this->route('company')->id ?? null;
+        $user = $this->user();
+        $company = $this->route('company');
+        $companyId = is_object($company) ? $company->id : $company;
 
         return $user && (
             $user->can(Permissions::EDIT_COMPANIES->value) ||
-            $user->company_id === (int) $companyId
+            (int) $user->company_id === (int) $companyId
         );
     }
 
@@ -28,7 +29,8 @@ class UpdateCompanyRequest extends FormRequest
      */
     public function rules(): array
     {
-        $companyId = $this->route('company')->id ?? null;
+        $company = $this->route('company');
+        $companyId = is_object($company) ? $company->id : $company;
 
         return [
             'name' => ['required', 'string', 'min:3', 'max:100'],

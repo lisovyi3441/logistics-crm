@@ -45,9 +45,11 @@ class CompanyController extends Controller
      */
     public function store(StoreCompanyRequest $request): RedirectResponse
     {
-        Company::create($request->validated());
+        $this->authorize('create', Company::class);
 
-        return redirect()->route('companies.index')->with('success', 'Company created successfully.');
+        $company = Company::create($request->validated());
+
+        return to_route('companies.show', $company)->with('success', 'Company created successfully.');
     }
 
     /**
@@ -82,9 +84,11 @@ class CompanyController extends Controller
      */
     public function update(UpdateCompanyRequest $request, Company $company): RedirectResponse
     {
+        $this->authorize('update', $company);
+
         $company->update($request->validated());
 
-        return redirect()->route('companies.index')->with('success', 'Company updated successfully.');
+        return to_route('companies.show', $company)->with('success', 'Company updated successfully.');
     }
 
     /**

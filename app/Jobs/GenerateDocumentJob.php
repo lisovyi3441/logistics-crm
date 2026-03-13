@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Events\DocumentGenerated;
 use App\Models\Order;
 use App\Models\OrderDocument;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -20,7 +21,8 @@ class GenerateDocumentJob implements ShouldQueue
      */
     public function __construct(
         public Order $order,
-        public string $type // 'cmr' or 'invoice'
+        public string $type, // 'cmr' or 'invoice'
+        public ?int $userId = null
     ) {}
 
     /**
@@ -49,6 +51,8 @@ class GenerateDocumentJob implements ShouldQueue
                 ['order_id' => $this->order->id, 'document_type' => $this->type],
                 ['path' => $path]
             );
+
+            DocumentGenerated::dispatch($this->order, $this->type);
         } catch (\Exception $e) {
             \Log::error("Failed to generate or upload document ({$this->type}) for Order #{$this->order->order_number}: ".$e->getMessage());
             throw $e;
