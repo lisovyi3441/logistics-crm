@@ -20,16 +20,14 @@ onMounted(() => {
 
     // Listen for personal notifications (e.g. PDF ready)
     window.Echo.private(`user.${user.id}`)
-        .listen('DocumentGenerated', (e: any) => {
-            console.log('Document ready:', e);
+        .listen('DocumentGenerated', () => {
             router.reload({ only: ['order', 'orders'] });
         });
 
     // Listen for company-wide updates
     if (user.company_id) {
         window.Echo.private(`company.${user.company_id}`)
-            .listen('OrderUpdated', (e: any) => {
-                console.log('Order updated:', e);
+            .listen('OrderUpdated', () => {
                 router.reload({ only: ['order', 'orders', 'recentOrders', 'stats'] });
             });
     }
@@ -37,7 +35,7 @@ onMounted(() => {
     // Admins listen to global order updates
     if (user.roles.includes('admin')) {
         window.Echo.private('admin.orders')
-            .listen('OrderUpdated', (e: any) => {
+            .listen('OrderUpdated', () => {
                 router.reload({ only: ['order', 'orders', 'recentOrders', 'stats'] });
             });
     }
