@@ -33,7 +33,9 @@ it('allows admin to dispatch document generation', function () {
     $response->assertSessionHas('success');
 
     Bus::assertDispatched(GenerateDocumentJob::class, function ($job) {
-        return $job->order->id === $this->order->id && $job->type === 'cmr';
+        return $job->order->id === $this->order->id && 
+               $job->type === 'cmr' && 
+               $job->userId === $this->admin->id;
     });
 });
 
@@ -44,7 +46,11 @@ it('allows manager to dispatch document generation for their company', function 
         ->post("/orders/{$this->order->order_number}/documents/invoice/generate");
 
     $response->assertRedirect();
-    Bus::assertDispatched(GenerateDocumentJob::class);
+    Bus::assertDispatched(GenerateDocumentJob::class, function ($job) {
+        return $job->order->id === $this->order->id && 
+               $job->type === 'invoice' && 
+               $job->userId === $this->manager->id;
+    });
 });
 
 it('forbids manager from generating documents for another company', function () {
@@ -60,7 +66,7 @@ it('forbids manager from generating documents for another company', function () 
 it('successfully generates and uploads document in the job', function () {
     Storage::fake('s3');
 
-    $job = new GenerateDocumentJob($this->order, 'cmr');
+    $job = new GenerateDocumentJob($this->order, 'cmr', $this->admin->id);
     $job->handle();
 
     $fileName = "cmr-{$this->order->order_number}.pdf";

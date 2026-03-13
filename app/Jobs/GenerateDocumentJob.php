@@ -22,7 +22,7 @@ class GenerateDocumentJob implements ShouldQueue
     public function __construct(
         public Order $order,
         public string $type, // 'cmr' or 'invoice'
-        public ?int $userId = null
+        public int $userId
     ) {}
 
     /**
@@ -52,7 +52,7 @@ class GenerateDocumentJob implements ShouldQueue
                 ['path' => $path]
             );
 
-            DocumentGenerated::dispatch($this->order, $this->type);
+            DocumentGenerated::dispatch($this->order, $this->type, $this->userId);
         } catch (\Exception $e) {
             \Log::error("Failed to generate or upload document ({$this->type}) for Order #{$this->order->order_number}: ".$e->getMessage());
             throw $e;
