@@ -61,7 +61,7 @@ services:
         limits:
           memory: 128M
 
-    reverb:
+  reverb:
     build:
       context: .
       dockerfile: Dockerfile.prod
@@ -83,6 +83,6 @@ services:
         limits:
           memory: 128M
 
-    networks:
+networks:
   shared_network:
     external: true
