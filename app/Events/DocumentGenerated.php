@@ -20,7 +20,8 @@ class DocumentGenerated implements ShouldBroadcast
      */
     public function __construct(
         public Order $order,
-        public string $documentType
+        public string $documentType,
+        public int $userId
     ) {}
 
     /**
@@ -31,7 +32,7 @@ class DocumentGenerated implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('orders.'.$this->order->id),
+            new PrivateChannel('user.'.$this->userId),
         ];
     }
 }

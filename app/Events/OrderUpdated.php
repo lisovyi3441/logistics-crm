@@ -18,10 +18,10 @@ class OrderUpdated implements ShouldBroadcast
     /**
      * Create a new event instance.
      */
-    public function __construct(public Order $order)
-    {
-        //
-    }
+    public function __construct(
+        public Order $order,
+        public string $message = ''
+    ) {}
 
     /**
      * Get the channels the event should broadcast on.
@@ -30,9 +30,14 @@ class OrderUpdated implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
-        return [
-            new PrivateChannel('orders.'.$this->order->id),
-            new PrivateChannel('companies.'.$this->order->company_id),
+        $channels = [
+            new PrivateChannel('admin.orders'),
         ];
+
+        if ($this->order->company_id) {
+            $channels[] = new PrivateChannel('company.'.$this->order->company_id);
+        }
+
+        return $channels;
     }
 }
