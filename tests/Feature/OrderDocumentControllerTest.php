@@ -33,8 +33,8 @@ it('allows admin to dispatch document generation', function () {
     $response->assertSessionHas('success');
 
     Bus::assertDispatched(GenerateDocumentJob::class, function ($job) {
-        return $job->order->id === $this->order->id && 
-               $job->type === 'cmr' && 
+        return $job->order->id === $this->order->id &&
+               $job->type === 'cmr' &&
                $job->userId === $this->admin->id;
     });
 });
@@ -47,8 +47,8 @@ it('allows manager to dispatch document generation for their company', function 
 
     $response->assertRedirect();
     Bus::assertDispatched(GenerateDocumentJob::class, function ($job) {
-        return $job->order->id === $this->order->id && 
-               $job->type === 'invoice' && 
+        return $job->order->id === $this->order->id &&
+               $job->type === 'invoice' &&
                $job->userId === $this->manager->id;
     });
 });
