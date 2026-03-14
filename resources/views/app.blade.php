@@ -40,9 +40,9 @@
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
 
         <meta name="reverb-key" content="{{ config('broadcasting.connections.reverb.key') }}">
-        <meta name="reverb-host" content="{{ config('broadcasting.connections.reverb.options.host') }}">
-        <meta name="reverb-port" content="{{ config('broadcasting.connections.reverb.options.port') }}">
-        <meta name="reverb-scheme" content="{{ config('broadcasting.connections.reverb.options.scheme') }}">
+        <meta name="reverb-host" content="{{ env('REVERB_HOST', 'localhost') }}">
+        <meta name="reverb-port" content="{{ env('REVERB_PORT', 443) }}">
+        <meta name="reverb-scheme" content="{{ env('REVERB_SCHEME', 'https') }}">
 
         @vite(['resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])
         @inertiaHead
