@@ -53,8 +53,6 @@ All financial data is stored in the DB as `integer` in cents (`_cents`). Calcula
 
 The CRM uses **PHP Attributes** (Laravel 11/12) for clean side-effect handling via **Observers**.
 
-This ensures a 100% reliable and transparent audit trail for both managers and clients.
-
 ---
 
 ## 🚀 9. Extension Roadmap
@@ -64,3 +62,9 @@ Algorithm for adding a new business feature:
 2. Define business logic and service integrations.
 3. Add a Feature test (`pest`).
 4. Call the Action from a controller or console command.
+
+---
+
+## 📡 10. Real-time Infrastructure (WebSockets)
+
+The application uses **Laravel Reverb** for high-performance, real-time UI updates (e.g., instant PDF readiness, live order status changes) via **Inertia v2 Partial Reloads** without requiring manual page refreshes.
