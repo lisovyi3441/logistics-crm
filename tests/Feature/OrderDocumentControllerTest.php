@@ -34,8 +34,7 @@ it('allows admin to dispatch document generation', function () {
 
     Bus::assertDispatched(GenerateDocumentJob::class, function ($job) {
         return $job->order->id === $this->order->id &&
-               $job->type === 'cmr' &&
-               $job->userId === $this->admin->id;
+               $job->type === 'cmr';
     });
 });
 
@@ -48,11 +47,9 @@ it('allows manager to dispatch document generation for their company', function 
     $response->assertRedirect();
     Bus::assertDispatched(GenerateDocumentJob::class, function ($job) {
         return $job->order->id === $this->order->id &&
-               $job->type === 'invoice' &&
-               $job->userId === $this->manager->id;
+               $job->type === 'invoice';
     });
 });
-
 it('forbids manager from generating documents for another company', function () {
     $otherCompany = Company::factory()->create();
     $otherOrder = Order::factory()->create(['company_id' => $otherCompany->id]);

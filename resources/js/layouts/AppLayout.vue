@@ -18,35 +18,26 @@ onMounted(() => {
     const user = page.props.auth?.user;
     if (!user) return;
 
-    // Listen for personal notifications (e.g. PDF ready)
+    // Listen for personal notifications (PDF generation finished)
+    // We use .listen('.DocumentGenerated') because broadcastAs adds a dot prefix in Echo unless specified
     window.Echo.private(`user.${user.id}`)
-        .listen('DocumentGenerated', () => {
-            router.reload({ only: ['order', 'orders'] });
+        .listen('.DocumentGenerated', (data: any) => {
+            console.log('PDF Generation Finished:', data);
+            
+            // Perform a partial reload to refresh the order data (which contains documents)
+            router.reload({ 
+                only: ['order', 'orders'],
+                onSuccess: () => {
+                    console.log('Order data refreshed via WebSockets');
+                }
+            });
         });
-
-    // Listen for company-wide updates
-    if (user.company_id) {
-        window.Echo.private(`company.${user.company_id}`)
-            .listen('OrderUpdated', () => {
-                router.reload({ only: ['order', 'orders', 'recentOrders', 'stats'] });
-            });
-    }
-
-    // Admins listen to global order updates
-    if (user.roles.includes('admin')) {
-        window.Echo.private('admin.orders')
-            .listen('OrderUpdated', () => {
-                router.reload({ only: ['order', 'orders', 'recentOrders', 'stats'] });
-            });
-    }
 });
 
 onUnmounted(() => {
     const user = page.props.auth?.user;
     if (user) {
         window.Echo.leave(`user.${user.id}`);
-        if (user.company_id) window.Echo.leave(`company.${user.company_id}`);
-        if (user.roles.includes('admin')) window.Echo.leave('admin.orders');
     }
 });
 </script>

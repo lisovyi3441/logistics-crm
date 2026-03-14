@@ -52,7 +52,9 @@ class GenerateDocumentJob implements ShouldQueue
                 ['path' => $path]
             );
 
+            // Notify the user that the document is ready via WebSockets
             DocumentGenerated::dispatch($this->order, $this->type, $this->userId);
+
         } catch (\Exception $e) {
             \Log::error("Failed to generate or upload document ({$this->type}) for Order #{$this->order->order_number}: ".$e->getMessage());
             throw $e;

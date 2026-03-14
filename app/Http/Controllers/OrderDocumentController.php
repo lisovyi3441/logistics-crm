@@ -29,7 +29,7 @@ class OrderDocumentController extends Controller
             abort(404);
         }
 
-        GenerateDocumentJob::dispatch($order, $type, auth()->id());
+        GenerateDocumentJob::dispatch($order, $type, (int) auth()->id());
 
         return back()->with('success', 'Document generation started in the background.');
     }
