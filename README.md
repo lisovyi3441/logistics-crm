@@ -12,10 +12,11 @@ A high-performance B2B Logistics CRM designed for freight companies and their cl
 
 ## 🚀 Key Features
 
+- **Real-time Synchronization:** Built-in **Laravel Reverb** WebSocket server provides instant UI updates for order statuses and background PDF generation without page reloads.
 - **Advanced Pricing Engine:** Implemented via the **Pipeline Pattern**. Calculates base rates, ADR surcharges, insurance fees, and volume discounts.
 - **Strict Multi-tenancy:** Data isolation between logistics providers and client companies using Eloquent Global Scopes.
 - **Concurrency Protection:** Uses **Pessimistic Locking** (`lockForUpdate`) to prevent race conditions during truck assignment and status changes.
-- **Inertia v2 Architecture:** Leverages **Deferred Props** for instant dashboard loading and **Wayfinder** for typed routing between PHP and TypeScript.
+- **Inertia v2 Architecture:** Leverages **Deferred Props** for instant dashboard loading, **Partial Reloads** for WebSocket updates, and **Wayfinder** for typed routing.
 - **GIS Integration:** Real-time distance and transit time calculations via OSRM API with automatic Redis caching and Haversine fallback.
 - **Automated Document Flow:** Background generation of **CMR** and **Invoices** (PDF) using Laravel Queues and MinIO (S3) storage.
 - **Role-Based Access Control (RBAC):** Granular permissions for Admins, Managers, and Observers via Spatie Permissions.
@@ -24,12 +25,12 @@ A high-performance B2B Logistics CRM designed for freight companies and their cl
 
 ## 🛠️ Tech Stack
 
-- **Backend:** PHP 8.5+, Laravel 12, Octane (FrankenPHP).
+- **Backend:** PHP 8.5+, Laravel 12, Octane (FrankenPHP), Reverb (WebSockets).
 - **Frontend:** Vue 3 (Composition API), Inertia.js v2, Tailwind CSS v4.
-- **Database:** MySQL 8.4, Redis (Caching/Sessions).
+- **Database:** MySQL 8.4, Redis (Caching/Sessions/Queues).
 - **Storage:** MinIO / AWS S3 (Documents & Assets).
 - **Testing:** Pest (Feature & Unit tests, 100% Core Logic Coverage).
-- **DevOps:** Docker (Sail), GitHub Actions (CI/CD), Nginx Proxy Manager.
+- **DevOps:** Docker (Sail/Multi-stage), GitHub Actions (CI/CD), Nginx Proxy Manager.
 
 ---
 
