@@ -11,7 +11,7 @@ services:
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
-      - TRUSTED_PROXIES=* 
+      - TRUSTED_PROXIES=172.16.0.0/12 
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-sail}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-password}
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
