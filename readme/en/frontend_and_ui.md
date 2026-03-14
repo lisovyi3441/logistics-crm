@@ -10,11 +10,13 @@ The Logistics CRM frontend is a reactive SPA built with **Vue 3** and **Inertia.
 - **Components**: Radix Vue (`reka-ui`) for accessible primitives.
 - **Icons**: Lucide Vue Next.
 - **Maps**: Leaflet.js for route visualization.
+- **WebSockets**: Laravel Echo and Pusher.js for real-time reactivity.
 
 ---
 
 ## ⚡ 2. Inertia v2 Patterns
 - **Deferred Props**: Heavy statistics load asynchronously with skeletons, keeping the initial page load instant.
+- **Partial Reloads**: Combined with WebSockets to automatically refresh specific components (like order lists or documents) without a full page refresh.
 - **Wayfinder**: Strongly typed routing in TypeScript. No more hardcoded URLs.
 - **Form Handling**: Native `useForm` hook with automatic server-side validation error mapping.
 
