@@ -3,19 +3,28 @@ import Pusher from 'pusher-js';
 
 window.Pusher = Pusher;
 
-if (import.meta.env.VITE_REVERB_APP_KEY) {
+// Helper to get meta tag content
+const getMeta = (name: string) => {
+    return document.querySelector(`meta[name="${name}"]`)?.getAttribute('content');
+};
+
+const reverbKey = getMeta('reverb-key') || import.meta.env.VITE_REVERB_APP_KEY;
+const reverbHost = getMeta('reverb-host') || import.meta.env.VITE_REVERB_HOST || 'localhost';
+const reverbPort = getMeta('reverb-port') || import.meta.env.VITE_REVERB_PORT || 8080;
+const reverbScheme = getMeta('reverb-scheme') || import.meta.env.VITE_REVERB_SCHEME || 'http';
+
+if (reverbKey) {
     window.Echo = new Echo({
         broadcaster: 'reverb',
-        key: import.meta.env.VITE_REVERB_APP_KEY,
-        wsHost: import.meta.env.VITE_REVERB_HOST,
-        wsPort: import.meta.env.VITE_REVERB_PORT ?? 80,
-        wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
-        forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
+        key: reverbKey,
+        wsHost: reverbHost,
+        wsPort: reverbPort,
+        wssPort: reverbPort,
+        forceTLS: reverbScheme === 'https',
         enabledTransports: ['ws', 'wss'],
     });
 
-    // Global listener for debugging ALL events
     window.Pusher.logToConsole = true;
 } else {
-    console.error('WebSocket configuration missing in .env');
+    console.error('WebSocket configuration is missing. Echo not initialized.');
 }

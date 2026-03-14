@@ -85,11 +85,6 @@ jobs:
             # Build and start the production containers
             docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
 
-            # Build Frontend Assets ON THE SERVER
-            # This ensures Vite picks up the real production .env keys
-            docker compose -f docker-compose.prod.yml exec -T app npm install
-            docker compose -f docker-compose.prod.yml exec -T app npm run build
-
             # Clear and optimize caches
             docker compose -f docker-compose.prod.yml exec -T app php artisan optimize:clear
             docker compose -f docker-compose.prod.yml exec -T app php artisan config:cache

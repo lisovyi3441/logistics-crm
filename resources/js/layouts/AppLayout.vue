@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { usePage, router } from '@inertiajs/vue3';
+import { onMounted, onUnmounted } from 'vue';
 import AppLayout from '@/layouts/app/AppSidebarLayout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { onMounted, onUnmounted } from 'vue';
-import { usePage, router } from '@inertiajs/vue3';
 
 type Props = {
     breadcrumbs?: BreadcrumbItem[];
