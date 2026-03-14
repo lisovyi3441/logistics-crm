@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Orders;
 
+use App\Events\OrderUpdated;
 use App\Logistics\Cargo\PricingData;
 use App\Logistics\Cargo\PricingPipeline;
 use App\Models\Order;
@@ -104,6 +105,7 @@ class AssignTruckAction
                 'comment' => "Assigned truck {$truck->name} to the order.{$priceChangedNote}{$manualNote}",
             ]);
 
+            OrderUpdated::dispatch($order, "Truck {$truck->name} assigned to the order.");
         });
     }
 }

@@ -34,12 +34,32 @@ onMounted(() => {
                 }
             });
         });
+
+    // Listen for company-wide updates (Status changes, Truck assignments)
+    if (user.company_id) {
+        window.Echo.private(`company.${user.company_id}`)
+            .listen('.OrderUpdated', (data: any) => {
+                if (isDebug) console.log('Order Updated (Company Channel):', data);
+                router.reload({ only: ['order', 'orders', 'recentOrders', 'stats'] });
+            });
+    }
+
+    // Admins listen to global order updates safely
+    if (user.roles && Array.isArray(user.roles) && user.roles.includes('admin')) {
+        window.Echo.private('admin.orders')
+            .listen('.OrderUpdated', (data: any) => {
+                if (isDebug) console.log('Order Updated (Admin Channel):', data);
+                router.reload({ only: ['order', 'orders', 'recentOrders', 'stats'] });
+            });
+    }
 });
 
 onUnmounted(() => {
     const user = page.props.auth?.user;
     if (user) {
         window.Echo.leave(`user.${user.id}`);
+        if (user.company_id) window.Echo.leave(`company.${user.company_id}`);
+        if (user.roles && Array.isArray(user.roles) && user.roles.includes('admin')) window.Echo.leave('admin.orders');
     }
 });
 </script>

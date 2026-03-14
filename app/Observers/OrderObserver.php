@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Observers;
 
+use App\Events\OrderUpdated;
 use App\Models\Order;
 use Illuminate\Support\Facades\Auth;
 
@@ -28,6 +29,8 @@ class OrderObserver
                 'new_status' => $order->status,
                 'comment' => $comment,
             ]);
+
+            OrderUpdated::dispatch($order, "Order status changed to {$order->status->label()}.");
         }
     }
 }
