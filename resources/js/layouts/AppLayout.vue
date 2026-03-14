@@ -18,17 +18,19 @@ onMounted(() => {
     const user = page.props.auth?.user;
     if (!user) return;
 
+    const isDebug = document.querySelector('meta[name="app-debug"]')?.getAttribute('content') === 'true';
+
     // Listen for personal notifications (PDF generation finished)
     // We use .listen('.DocumentGenerated') because broadcastAs adds a dot prefix in Echo unless specified
     window.Echo.private(`user.${user.id}`)
         .listen('.DocumentGenerated', (data: any) => {
-            console.log('PDF Generation Finished:', data);
+            if (isDebug) console.log('PDF Generation Finished:', data);
             
             // Perform a partial reload to refresh the order data (which contains documents)
             router.reload({ 
                 only: ['order', 'orders'],
                 onSuccess: () => {
-                    console.log('Order data refreshed via WebSockets');
+                    if (isDebug) console.log('Order data refreshed via WebSockets');
                 }
             });
         });

@@ -43,6 +43,7 @@
         <meta name="reverb-host" content="{{ env('REVERB_HOST', 'localhost') }}">
         <meta name="reverb-port" content="{{ env('REVERB_PORT', 443) }}">
         <meta name="reverb-scheme" content="{{ env('REVERB_SCHEME', 'https') }}">
+        <meta name="app-debug" content="{{ config('app.debug') ? 'true' : 'false' }}">
 
         @vite(['resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])
         @inertiaHead

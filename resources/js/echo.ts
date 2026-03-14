@@ -12,6 +12,7 @@ const reverbKey = getMeta('reverb-key') || import.meta.env.VITE_REVERB_APP_KEY;
 const reverbHost = getMeta('reverb-host') || import.meta.env.VITE_REVERB_HOST || 'localhost';
 const reverbPort = getMeta('reverb-port') || import.meta.env.VITE_REVERB_PORT || 8080;
 const reverbScheme = getMeta('reverb-scheme') || import.meta.env.VITE_REVERB_SCHEME || 'http';
+const appDebug = getMeta('app-debug') === 'true';
 
 if (reverbKey) {
     window.Echo = new Echo({
@@ -24,7 +25,9 @@ if (reverbKey) {
         enabledTransports: ['ws', 'wss'],
     });
 
-    window.Pusher.logToConsole = true;
+    if (appDebug) {
+        window.Pusher.logToConsole = true;
+    }
 } else {
     console.error('WebSocket configuration is missing. Echo not initialized.');
 }
