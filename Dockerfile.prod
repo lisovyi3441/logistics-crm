@@ -1,45 +1,15 @@
-# Stage 1: Build Frontend Assets
-FROM php:8.5-cli AS frontend
+FROM dunglas/frankenphp:php8.5
 
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
+    unzip \
     curl \
     git \
-    unzip \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
-
-# Cache backend dependencies
-COPY composer.json composer.lock ./
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-RUN composer install --no-dev --no-scripts --no-autoloader --no-interaction
-
-# Cache frontend dependencies
-COPY package.json package-lock.json ./
-RUN npm ci
-
-# Copy the rest of the code
-COPY . .
-
-# Finish backend setup
-RUN composer dump-autoload --optimize --no-dev
-
-# Build frontend
-ENV VITE_SKIP_WAYFINDER=true
-RUN npm run build
-
-# Stage 2: Production Server (FrankenPHP)
-FROM dunglas/frankenphp:php8.5
-
-# Install unzip to speed up composer downloads
-RUN apt-get update && \
-    apt-get install -y unzip && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Install required PHP extensions using the provided helper script
-# PCNTL is required for Laravel Octane
+# Install PHP extensions
 RUN install-php-extensions \
     pdo_mysql \
     redis \
@@ -49,29 +19,21 @@ RUN install-php-extensions \
     zip \
     opcache
 
-# Ensure Composer is available
 WORKDIR /app
-
-# Cache production backend dependencies
-COPY composer.json composer.lock ./
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-RUN composer install --no-dev --no-scripts --no-autoloader --no-interaction
 
 # Copy application files
 COPY . .
 
-# Copy compiled frontend assets from Stage 1
-COPY --from=frontend /app/public/build ./public/build
+# Install PHP dependencies
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN composer install --no-dev --no-scripts --no-autoloader --no-interaction
 
-# Finish backend setup (autoload & scripts)
-RUN composer dump-autoload --optimize --no-dev
-
-# Set up Laravel permissions (FrankenPHP runs as root by default, or specific standard users)
+# Set up permissions
 RUN chmod -R 775 storage bootstrap/cache
 
 # Expose standard web port
 EXPOSE 80
 
-# Configure FrankenPHP to run Laravel Octane worker
+# Configure FrankenPHP
 ENV FRANKENPHP_BINARY=/usr/local/bin/frankenphp
 CMD ["php", "artisan", "octane:start", "--server=frankenphp", "--host=0.0.0.0", "--port=80", "--admin-port=2019", "--workers=1"]

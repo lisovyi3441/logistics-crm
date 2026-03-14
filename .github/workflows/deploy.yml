@@ -77,28 +77,31 @@ jobs:
           key: ${{ secrets.DO_SSH_KEY }}
           passphrase: ${{ secrets.DO_SSH_PASSPHRASE }}
           script: |
-            set -e # 🛑 Stop script execution if any command fails!
+            set -e
             cd ${{ secrets.DO_PROJECT_PATH }}
             git fetch origin main
             git reset --hard origin/main
 
-            # Build and start the production container
+            # Build and start the production containers
             docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
 
-            # Wait a few seconds for the container to initialize
-            sleep 5
+            # Build Frontend Assets ON THE SERVER
+            # This ensures Vite picks up the real production .env keys
+            docker compose -f docker-compose.prod.yml exec -T app npm install
+            docker compose -f docker-compose.prod.yml exec -T app npm run build
 
-            # Validate and refresh database with dummy data
-            docker compose -f docker-compose.prod.yml exec -T app php artisan migrate:fresh --seed --force
-
-            # Clear caches
+            # Clear and optimize caches
+            docker compose -f docker-compose.prod.yml exec -T app php artisan optimize:clear
             docker compose -f docker-compose.prod.yml exec -T app php artisan config:cache
             docker compose -f docker-compose.prod.yml exec -T app php artisan route:cache
             docker compose -f docker-compose.prod.yml exec -T app php artisan view:cache
 
-            # Restart the container to reload Octane workers safely
+            # Restart to apply changes
             docker compose -f docker-compose.prod.yml restart app queue reverb
 
-            # Setup Cron for Laravel Scheduler
+            # Clean up old docker images to save disk space
+            docker image prune -f
+
+            # Setup Cron
             crontab -l 2>/dev/null | grep -v "schedule:run" | crontab -
             (crontab -l 2>/dev/null; echo "* * * * * cd ${{ secrets.DO_PROJECT_PATH }} && PATH=\$$PATH:/usr/bin:/usr/local/bin:/snap/bin docker compose -f docker-compose.prod.yml exec -T app php artisan schedule:run >> /dev/null 2>&1") | crontab -

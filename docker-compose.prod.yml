@@ -24,6 +24,11 @@ services:
       - ./storage/app/public:/app/storage/app/public
     networks:
       - shared_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
     deploy:
       resources:
         limits:
@@ -56,6 +61,11 @@ services:
       - shared_network
     depends_on:
       - app
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
     deploy:
       resources:
         limits:
@@ -78,6 +88,11 @@ services:
       - shared_network
     depends_on:
       - app
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
     deploy:
       resources:
         limits:
