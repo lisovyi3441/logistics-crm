@@ -27,7 +27,7 @@ A high-performance B2B Logistics CRM designed for freight companies and their cl
 
 - **Backend:** PHP 8.5+, Laravel 12, Octane (FrankenPHP), Reverb (WebSockets).
 - **Frontend:** Vue 3 (Composition API), Inertia.js v2, Tailwind CSS v4.
-- **Database:** MySQL 8.4, Redis (Caching/Sessions/Queues).
+- **Database:** PostgreSQL 16, Redis (Caching/Sessions/Queues).
 - **Storage:** MinIO / AWS S3 (Documents & Assets).
 - **Testing:** Pest (Feature & Unit tests, 100% Core Logic Coverage).
 - **DevOps:** Docker (Sail/Multi-stage), GitHub Actions (CI/CD), Nginx Proxy Manager.
@@ -50,12 +50,14 @@ Detailed technical documentation is available in the [`/readme/en`](./readme/en)
 ## ⚙️ Quick Start (Local Development)
 
 ### 1. Clone the repository
+
 ```bash
 git clone https://github.com/lisovyi3441/logistics-crm.git
 cd logistics-crm
 ```
 
 ### 2. Setup with Laravel Sail
+
 ```bash
 docker run --rm \
     -u "$(id -u):$(id -g)" \
@@ -77,7 +79,9 @@ cp .env.example .env
 ```
 
 ### 3. Demo Access
+
 Visit `http://localhost` and use the **1-Click Login** buttons on the Welcome page:
+
 - **Admin:** `admin@gmail.com` / `password`
 - **Manager:** `manager@gmail.com` / `password`
 
@@ -86,6 +90,7 @@ Visit `http://localhost` and use the **1-Click Login** buttons on the Welcome pa
 ## ✅ Quality Standards
 
 The project maintains high code quality standards:
+
 - **Static Analysis:** PHPStan/Larastan (Level 5 - Professional Standard).
 - **Formatting:** Laravel Pint (Strict preset).
 - **Testing:** Automated CI/CD pipeline on every push.
