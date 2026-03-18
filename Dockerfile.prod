@@ -40,7 +40,7 @@ RUN apt-get update && \
 
 # Install required PHP extensions
 RUN install-php-extensions \
-    pdo_mysql \
+    pdo_pgsql pgsql \
     redis \
     bcmath \
     pcntl \
