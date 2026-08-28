@@ -26,10 +26,8 @@ COPY . .
 # Finish backend setup
 RUN composer dump-autoload --optimize --no-dev
 
-# Prepare environment & generate Wayfinder routes for frontend
-RUN cp .env.example .env && php artisan key:generate && php artisan wayfinder:generate
-
-# Build frontend
+# Build frontend (We don't need real .env keys here anymore!)
+ENV VITE_SKIP_WAYFINDER=true
 RUN npm run build
 
 # Stage 2: Production Server (FrankenPHP)
