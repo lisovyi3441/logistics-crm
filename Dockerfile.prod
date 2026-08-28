@@ -26,8 +26,14 @@ COPY . .
 # Finish backend setup
 RUN composer dump-autoload --optimize --no-dev
 
-# Build frontend (We don't need real .env keys here anymore!)
-ENV VITE_SKIP_WAYFINDER=true
+# Prepare environment & generate Wayfinder routes for frontend
+RUN touch .env \
+    && echo "APP_KEY=base64:dGVzdGtleWZvcndheWZpbmRlcmdlbmVyYXRpb24xMjM=" >> .env \
+    && echo "DB_CONNECTION=sqlite" >> .env \
+    && touch database/database.sqlite \
+    && php artisan wayfinder:generate
+
+# Build frontend
 RUN npm run build
 
 # Stage 2: Production Server (FrankenPHP)
