@@ -6,7 +6,7 @@ import '../css/app.css';
 import './echo';
 import { initializeTheme } from './composables/useAppearance';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = import.meta.env.VITE_APP_NAME || 'Logistics CRM';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
