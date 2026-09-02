@@ -89,20 +89,20 @@ jobs:
             sleep 5
 
             # Validate and refresh database with dummy data
-            docker compose -f docker-compose.prod.yml exec -T app php artisan migrate:fresh --seed --force
+            docker compose -f docker-compose.prod.yml exec -T crm-app php artisan migrate:fresh --seed --force
 
             # Clear and optimize caches
-            docker compose -f docker-compose.prod.yml exec -T app php artisan optimize:clear
-            docker compose -f docker-compose.prod.yml exec -T app php artisan config:cache
-            docker compose -f docker-compose.prod.yml exec -T app php artisan route:cache
-            docker compose -f docker-compose.prod.yml exec -T app php artisan view:cache
+            docker compose -f docker-compose.prod.yml exec -T crm-app php artisan optimize:clear
+            docker compose -f docker-compose.prod.yml exec -T crm-app php artisan config:cache
+            docker compose -f docker-compose.prod.yml exec -T crm-app php artisan route:cache
+            docker compose -f docker-compose.prod.yml exec -T crm-app php artisan view:cache
 
             # Restart to apply changes
-            docker compose -f docker-compose.prod.yml restart app queue reverb
+            docker compose -f docker-compose.prod.yml restart crm-app crm-queue crm-reverb
 
             # Clean up old docker images to save disk space
             docker image prune -f
 
             # Setup Cron for Laravel Scheduler
             crontab -l 2>/dev/null | grep -v "schedule:run" | crontab -
-            (crontab -l 2>/dev/null; echo "* * * * * cd ${{ secrets.DO_PROJECT_PATH }} && PATH=\$$PATH:/usr/bin:/usr/local/bin:/snap/bin docker compose -f docker-compose.prod.yml exec -T app php artisan schedule:run >> /dev/null 2>&1") | crontab -
+            (crontab -l 2>/dev/null; echo "* * * * * cd ${{ secrets.DO_PROJECT_PATH }} && PATH=\$$PATH:/usr/bin:/usr/local/bin:/snap/bin docker compose -f docker-compose.prod.yml exec -T crm-app php artisan schedule:run >> /dev/null 2>&1") | crontab -

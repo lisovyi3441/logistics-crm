@@ -1,5 +1,5 @@
 services:
-  app:
+  crm-app:
     build:
       context: .
       dockerfile: Dockerfile.prod
@@ -34,7 +34,7 @@ services:
         limits:
           memory: 256M
 
-  queue:
+  crm-queue:
     build:
       context: .
       dockerfile: Dockerfile.prod
@@ -60,7 +60,7 @@ services:
     networks:
       - shared_network
     depends_on:
-      - app
+      - crm-app
     logging:
       driver: "json-file"
       options:
@@ -71,7 +71,7 @@ services:
         limits:
           memory: 128M
 
-  reverb:
+  crm-reverb:
     build:
       context: .
       dockerfile: Dockerfile.prod
@@ -87,7 +87,7 @@ services:
     networks:
       - shared_network
     depends_on:
-      - app
+      - crm-app
     logging:
       driver: "json-file"
       options:
