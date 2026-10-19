@@ -8,7 +8,7 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('migrate:fresh --seed --force')->cron('0 */4 * * *');
+Schedule::command('migrate:fresh --seed --force')->cron('0 */8 * * *');
 Schedule::call(function () {
     // Clear the 'local' bucket (MinIO S3)
     \Illuminate\Support\Facades\Storage::disk('s3')->deleteDirectory('/');
