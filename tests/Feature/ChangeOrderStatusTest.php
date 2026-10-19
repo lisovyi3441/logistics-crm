@@ -101,3 +101,18 @@ it('fails for admin if transition is invalid in the model', function () {
         'status' => OrderStatus::DELIVERED->value,
     ]);
 });
+
+it('handles transition to the same status gracefully', function () {
+    $response = actingAs($this->admin)
+        ->put("/orders/{$this->order->order_number}/status", [
+            'status' => OrderStatus::NEW->value,
+        ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHasNoErrors();
+
+    $this->assertDatabaseHas('orders', [
+        'id' => $this->order->id,
+        'status' => OrderStatus::NEW->value,
+    ]);
+});

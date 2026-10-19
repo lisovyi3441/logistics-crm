@@ -241,3 +241,79 @@ it('scopes order index correctly for managers', function () {
             ->has('orders.data', 2)
         );
 });
+
+it('renders create form with companies for admin and without for manager', function () {
+    actingAs($this->admin)
+        ->get('/orders/create')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('orders/Form')
+            ->has('companies')
+        );
+
+    actingAs($this->manager)
+        ->get('/orders/create')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('orders/Form')
+            ->where('companies', [])
+        );
+});
+
+it('renders show page with trucks for users with assign permission', function () {
+    $order = Order::factory()->create([
+        'company_id' => $this->company->id,
+        'user_id' => $this->admin->id,
+    ]);
+    \App\Models\Truck::factory()->create(['name' => 'Truck A']);
+
+    actingAs($this->admin)
+        ->get("/orders/{$order->order_number}")
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('orders/Show')
+            ->has('trucks', 1)
+        );
+
+    $observer = User::factory()->create(['company_id' => $this->company->id]);
+    $observer->assignRole('observer');
+
+    actingAs($observer)
+        ->get("/orders/{$order->order_number}")
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page
+            ->component('orders/Show')
+            ->where('trucks', [])
+        );
+});
+
+it('calculates cbm from dimensions when cbm is omitted in StoreOrderRequest', function () {
+    $response = actingAs($this->admin)
+        ->post('/orders', [
+            'company_id' => $this->company->id,
+            'pickup_address' => 'Kyiv',
+            'pickup_lat' => 50.45,
+            'pickup_lng' => 30.52,
+            'delivery_address' => 'Lviv',
+            'delivery_lat' => 49.83,
+            'delivery_lng' => 24.02,
+            'items' => [
+                [
+                    'name' => 'Box',
+                    'quantity' => 1,
+                    'weight_kg' => 10,
+                    'length_cm' => 100,
+                    'width_cm' => 100,
+                    'height_cm' => 100,
+                    'declared_value_cents' => 1000,
+                ],
+            ],
+        ]);
+
+    $response->assertRedirect(route('orders.index'));
+
+    $this->assertDatabaseHas('order_items', [
+        'name' => 'Box',
+        'cbm' => 1.0,
+    ]);
+});

@@ -104,3 +104,18 @@ it('passes validation if no truck id is given', function () {
 
     expect($passed)->toBeTrue();
 });
+
+it('passes validation if vehicle type is not found or value is not array', function () {
+    $rule = new MaxPayloadVolumeRule(999999);
+
+    $passed = true;
+    $rule->validate('items', [['weight_kg' => 100]], function () use (&$passed) {
+        $passed = false;
+    });
+    expect($passed)->toBeTrue();
+
+    $rule->validate('items', 'not-an-array', function () use (&$passed) {
+        $passed = false;
+    });
+    expect($passed)->toBeTrue();
+});

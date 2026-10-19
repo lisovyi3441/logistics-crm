@@ -110,3 +110,32 @@ it('forbids manager from editing another company', function () {
         'name' => 'Other Company',
     ]);
 });
+
+it('renders create form for admin and forbids manager', function () {
+    actingAs($this->admin)
+        ->get('/companies/create')
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page->component('companies/Form'));
+
+    actingAs($this->manager)
+        ->get('/companies/create')
+        ->assertForbidden();
+});
+
+it('renders show page for company', function () {
+    $company = Company::factory()->create();
+
+    actingAs($this->admin)
+        ->get("/companies/{$company->id}")
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page->component('companies/Show'));
+});
+
+it('renders edit form for authorized user', function () {
+    $company = Company::factory()->create();
+
+    actingAs($this->admin)
+        ->get("/companies/{$company->id}/edit")
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page->component('companies/Form'));
+});

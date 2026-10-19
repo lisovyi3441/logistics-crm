@@ -27,4 +27,18 @@ class CompanyResourceTest extends TestCase
         $this->assertEquals('Test Corp', $data['name']);
         $this->assertEquals('UA12345678', $data['vat_number']);
     }
+
+    public function test_it_transforms_loaded_users(): void
+    {
+        $company = Company::factory()->create();
+        $user = \App\Models\User::factory()->create(['company_id' => $company->id]);
+        $company->load('users.roles');
+
+        $resource = new CompanyResource($company);
+        $data = $resource->resolve();
+
+        $this->assertArrayHasKey('users', $data);
+        $this->assertCount(1, $data['users']);
+        $this->assertEquals($user->id, $data['users'][0]['id']);
+    }
 }

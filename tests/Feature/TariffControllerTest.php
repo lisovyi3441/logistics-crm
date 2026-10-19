@@ -38,12 +38,17 @@ it('forbids manager from editing tariffs', function () {
 });
 
 it('allows admin to update global tariffs', function () {
+    $vehicleType = \App\Models\VehicleType::factory()->create(['base_price_per_km_cents' => 100]);
+
     actingAs($this->admin)
         ->from(route('tariffs.edit'))
         ->put(route('tariffs.update'), [
             'tax_rate_percent' => 15, // Change to 15%
             'insurance_rate_percent' => 2.5,
             'adr_surcharge_percent' => 30,
+            'vehicle_types' => [
+                ['id' => $vehicleType->id, 'base_price_per_km_cents' => 250],
+            ],
         ])
         ->assertRedirect(route('tariffs.edit'));
 
@@ -51,6 +56,8 @@ it('allows admin to update global tariffs', function () {
         'tax_rate_percent' => 15,
         'adr_surcharge_percent' => 30,
     ]);
+
+    expect($vehicleType->fresh()->base_price_per_km_cents)->toBe(250);
 });
 
 it('forbids manager from updating tariffs', function () {

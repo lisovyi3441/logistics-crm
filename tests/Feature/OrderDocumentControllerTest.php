@@ -109,3 +109,39 @@ it('forbids downloading document of another company', function () {
 
     $response->assertForbidden();
 });
+
+it('returns 404 when document does not belong to order', function () {
+    $otherOrder = Order::factory()->create(['company_id' => $this->company->id]);
+    $document = OrderDocument::create([
+        'order_id' => $otherOrder->id,
+        'document_type' => 'invoice',
+        'path' => 'other.pdf',
+    ]);
+
+    actingAs($this->admin)
+        ->get("/orders/{$this->order->order_number}/documents/{$document->id}/download")
+        ->assertNotFound();
+});
+
+it('supports inline viewing and cmr downloads', function () {
+    Storage::fake('s3');
+    $path = "orders/{$this->order->order_number}/cmr.pdf";
+    Storage::disk('s3')->put($path, '%PDF-1.4 sample content');
+
+    $document = OrderDocument::create([
+        'order_id' => $this->order->id,
+        'document_type' => 'cmr',
+        'path' => $path,
+    ]);
+
+    // View action
+    actingAs($this->admin)
+        ->get("/orders/{$this->order->order_number}/documents/{$document->id}/download?action=view")
+        ->assertOk()
+        ->assertHeader('Content-Type', 'application/pdf');
+
+    // Download action
+    actingAs($this->admin)
+        ->get("/orders/{$this->order->order_number}/documents/{$document->id}/download")
+        ->assertOk();
+});

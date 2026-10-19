@@ -30,6 +30,20 @@ it('fetches a valid route from osrm api and caches it', function () {
     // Check caching
     $cacheKey = 'route_'.md5('48,10-49,11');
     expect(Cache::has($cacheKey))->toBeTrue();
+
+    // Verify cache hit directly returns without HTTP request
+    Http::fake(fn () => throw new Exception('Should not reach here on cache hit'));
+    $cachedRoute = $service->getRoute(48.0, 10.0, 49.0, 11.0);
+    expect($cachedRoute)->toBe($route);
+});
+
+it('catches network exceptions and falls back to haversine', function () {
+    Http::fake(fn () => throw new Exception('Network unreachable'));
+
+    $service = new OsrmRoutingService;
+    $route = $service->getRoute(50.45, 30.52, 49.83, 24.02);
+
+    expect($route['provider'])->toBe('fallback_haversine');
 });
 
 it('falls back to haversine when api fails', function () {

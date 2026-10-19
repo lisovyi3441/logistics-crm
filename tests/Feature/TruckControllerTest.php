@@ -87,3 +87,48 @@ it('allows admin to delete a free truck', function () {
 
     $this->assertDatabaseMissing('trucks', ['id' => $truck->id]);
 });
+
+it('renders create form for admin', function () {
+    actingAs($this->admin)
+        ->get(route('trucks.create'))
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page->component('trucks/Form'));
+});
+
+it('renders edit form for a free truck', function () {
+    $truck = Truck::factory()->create(['vehicle_type_id' => $this->vehicleType->id]);
+
+    actingAs($this->admin)
+        ->get(route('trucks.edit', $truck))
+        ->assertSuccessful()
+        ->assertInertia(fn ($page) => $page->component('trucks/Form'));
+});
+
+it('prevents edit, update, or delete on a busy truck', function () {
+    $truck = Truck::factory()->create(['vehicle_type_id' => $this->vehicleType->id]);
+    \App\Models\Order::factory()->create([
+        'truck_id' => $truck->id,
+        'status' => \App\Enums\OrderStatus::IN_TRANSIT,
+    ]);
+
+    actingAs($this->admin)
+        ->get(route('trucks.edit', $truck))
+        ->assertRedirect(route('trucks.index'))
+        ->assertSessionHas('error');
+
+    actingAs($this->admin)
+        ->put(route('trucks.update', $truck), [
+            'name' => 'Attempted Update',
+            'license_plate' => 'AA 0000 BB',
+            'vehicle_type_id' => $this->vehicleType->id,
+        ])
+        ->assertRedirect(route('trucks.index'))
+        ->assertSessionHas('error');
+
+    actingAs($this->admin)
+        ->delete(route('trucks.destroy', $truck))
+        ->assertRedirect(route('trucks.index'))
+        ->assertSessionHas('error');
+
+    $this->assertDatabaseHas('trucks', ['id' => $truck->id]);
+});
