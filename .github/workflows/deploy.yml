@@ -93,12 +93,16 @@ jobs:
 
             # Clear and optimize caches
             docker compose -f docker-compose.prod.yml exec -T crm-app php artisan optimize:clear
+            docker compose -f docker-compose.prod.yml exec -T crm-queue php artisan optimize:clear
             docker compose -f docker-compose.prod.yml exec -T crm-app php artisan config:cache
             docker compose -f docker-compose.prod.yml exec -T crm-app php artisan route:cache
             docker compose -f docker-compose.prod.yml exec -T crm-app php artisan view:cache
 
             # Restart to apply changes
             docker compose -f docker-compose.prod.yml restart crm-app crm-queue crm-reverb
+
+            # Reload Nginx proxy cache to ensure fresh container IPs are picked up
+            docker exec nginx_proxy nginx -s reload 2>/dev/null || true
 
             # Clean up old docker images to save disk space
             docker image prune -f

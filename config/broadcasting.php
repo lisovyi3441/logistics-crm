@@ -9,7 +9,7 @@ return [
             'secret' => env('REVERB_APP_SECRET'),
             'app_id' => env('REVERB_APP_ID'),
             'options' => [
-                'host' => env('REVERB_SERVER_HOST', 'reverb'), // Внутрішній хост для PHP
+                'host' => env('REVERB_SERVER_HOST', 'crm-reverb'), // Внутрішній хост для PHP
                 'port' => env('REVERB_SERVER_PORT', 8080), // Внутрішній порт (завжди 8080 в Docker)
                 'scheme' => env('REVERB_SERVER_SCHEME', 'http'), // Завжди http всередині Docker
                 'useTLS' => env('REVERB_SERVER_SCHEME') === 'https',
